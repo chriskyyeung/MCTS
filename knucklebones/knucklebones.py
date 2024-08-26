@@ -138,11 +138,9 @@ class Knucklebones(GameState):
             NotImplementedError: Legal action generation is a must
 
         Returns:
-            np.ndarray: All legal actions under the current game state
+            list: All legal actions on position, without the dice value
         """
-        valid_row = np.where(self._nxt_row[self._moveID, :] < 3)[0]
-        moves = [(r,d) for r in valid_row for d in range(1,7)]
-        return moves
+        return np.where(self._nxt_row[self._moveID, :] < 3)[0].tolist()
 
     @staticmethod
     def _get_row_output(row: np.ndarray) -> str:

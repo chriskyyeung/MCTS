@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from base.game_state import GameState
-from base.mcts_node import MCTSNode
+from base.non_determ_mcts_node import NonDetermMCTSNode
 from knucklebones.knucklebones import Knucklebones
 from knucklebones.knucklebones_node import KnucklebonesNode
 
@@ -15,10 +15,10 @@ log_config = {
 }
 
 game: list[GameState] = [Knucklebones]
-node: list[MCTSNode] = [KnucklebonesNode]
+node: list[NonDetermMCTSNode] = [KnucklebonesNode]
 game_config = [{"c":1, "n_simulation": 500}]
 
-def computer_move(board: GameState, node: MCTSNode, c=1, n_simulation=1000) -> tuple:
+def computer_move(board: GameState, node: NonDetermMCTSNode, c=1, n_simulation=1000) -> tuple:
     node = node(board, log_config=log_config)
     best_child = node.best_action(c, n_simulation)
     return best_child.parent_action
