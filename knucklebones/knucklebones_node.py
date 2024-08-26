@@ -15,28 +15,8 @@ class KnucklebonesNode(NonDetermMCTSNode):
         pass
 
     @property
-    def W(self) -> float:
-        """Numerator of the exploitation part
-
-        Returns:
-            float: Sum of score of all simulated situations
-        """
-        return np.sum([k*v for k,v in self._score.items()])
-
-    def _get_state(self, idx: int) -> np.Any:
-        return self._dice[idx]
- 
-    @staticmethod
-    def simulation_step(state: GameState) -> list[tuple[int, int]]:
-        """_summary_
-
-        Args:
-            state (GameState): Current game state
-
-        Returns:
-            list[tuple[int, int]]: List of moves in the form of (row, dice)
-        """
-        return [(super().simulation_step(state), dice) for dice in range(1,7)]
+    def _random_state(self) -> int:
+        return self._dice[self._get_random_state_index(1)]
             
 
     def simulation(self) -> tuple[Self, int]:
@@ -49,8 +29,3 @@ class KnucklebonesNode(NonDetermMCTSNode):
         """
         state, result = super().simulation()
         return state,  result * KnucklebonesNode._check[self.state._moveID]
-    
-
-
-    def selection(self, c: float) -> Self:
-        return super().selection(c)

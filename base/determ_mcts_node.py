@@ -35,6 +35,21 @@ class DetermMCTSNode(MCTSNode):
         super().__init__(state, parent, parent_action, log_config)
         pass
 
+    @property
+    def child_weights(self) -> list:
+        # Weights of every children
+        return  np.array([
+            child._W / child._N + self._c * np.sqrt(2 * np.log(self._N) / child._N)
+            for child in self.children
+        ])
+
+    def _get_action(self) -> list:
+        return self._untried_actions.pop()
+
+    def best_child(self) -> Self:
+        # Select the best child
+        return self.children[np.argmax(self.child_weights)]
+        
     def selection(self, c: float) -> Self:
         """Selection step
 
@@ -47,7 +62,7 @@ class DetermMCTSNode(MCTSNode):
         self._c = c
         current_node = self
         while (current_node.is_fully_expanded) and (not current_node.is_terminal):
-            current_node = current_node.best_child
+            current_node = current_node.best_child()
 
         return current_node
 
@@ -78,15 +93,3 @@ class DetermMCTSNode(MCTSNode):
             current_state = current_state.update(action)
         
         return current_state, current_state.game_result
-
-    def backpropagate(self, score: int) -> None:
-        """Backpropagation, triggering parent's one if any
-
-        Args:
-            score (int): Score of the current state
-        """
-        self._N += 1
-        self._score[score] += 1
-        if self.parent:
-            self.parent.backpropagate(score*-1)
-        return 

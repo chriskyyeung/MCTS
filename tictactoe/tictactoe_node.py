@@ -11,16 +11,6 @@ class TicTacToeNode(DetermMCTSNode):
         super().__init__(*args, **kwargs)
         pass
 
-    @property
-    def W(self) -> float:
-        """Numerator of the exploitation part
-
-        Returns:
-            float: Sum of score
-        """
-        # Better performance than the pure count of winning
-        return np.sum([k*v for k,v in self._score.items()])
-
     def simulation(self) -> tuple[Self, int]:
         """Simulation process in one MCTS iteraction
 
@@ -44,10 +34,10 @@ class TicTacToeNode(DetermMCTSNode):
         current_node = super().selection(c)
 
         node = current_node
-        msg = f"\n{node.state._board}]\nScore: {node.W}"
+        msg = f"\n{node.state._board}]\nScore: {node._W}"
         while node.parent:
             node = node.parent
-            msg = f"\n{node.state._board}]\nScore: {node.W}" + msg
+            msg = f"\n{node.state._board}]\nScore: {node._W}" + msg
         
         self.logger.debug(msg)
         return current_node
