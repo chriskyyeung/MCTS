@@ -1,0 +1,8 @@
+# Folder
+.vscode
+__pycache__
+
+# File extension
+*.ipynb
+
+# File

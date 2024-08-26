@@ -6,10 +6,10 @@ Implementation of MCTS on
 3. KnuckleBones (from Cult of the Lamb)
 
 ## Plan
-- [ ] Game mechanism
-  - [ ] Tic-tac-toe
-  - [ ] Connect-4
-  - [ ] KnuckleBones
+- [x] Game mechanism
+  - [x] Tic-tac-toe
+  - [x] Connect-4
+  - [x] KnuckleBones
 - [ ] MCTS implementation
 - [ ] Reinforcement Learning
 - [ ] GUI (optional)
