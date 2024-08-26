@@ -2,9 +2,9 @@ from typing import Self
 
 import numpy as np
 
-from base.mcts_node import MCTSNode
+from base.determ_mcts_node import DetermMCTSNode
 
-class Connet4Node(MCTSNode):
+class Connet4Node(DetermMCTSNode):
     """MCTS node for a Connect-4 Game
     """
     def __init__(self, *args, **kwargs) -> None:
@@ -30,23 +30,3 @@ class Connet4Node(MCTSNode):
         """
         state, result = super().simulation()
         return state,  result * -self.state._turnID
-
-    def selection(self, c: float) -> Self:
-        """Override the parent class method for debugging
-
-        Args:
-            c (float): The exploration parameter
-
-        Returns:
-            Self: Current node fater the process
-        """
-        current_node = super().selection(c)
-
-        node = current_node
-        msg = f"\n{node.state._board}]\nScore: {node.W}"
-        while node.parent:
-            node = node.parent
-            msg = f"\n{node.state._board}]\nScore: {node.W}" + msg
-        
-        self.logger.debug(msg)
-        return current_node

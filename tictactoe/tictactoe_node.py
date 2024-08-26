@@ -2,9 +2,9 @@ from typing import Self
 
 import numpy as np
 
-from base.mcts_node import MCTSNode
+from base.determ_mcts_node import DetermMCTSNode
 
-class TicTacToeNode(MCTSNode):
+class TicTacToeNode(DetermMCTSNode):
     """MCTS node for a TicTacToe Game
     """
     def __init__(self, *args, **kwargs) -> None:

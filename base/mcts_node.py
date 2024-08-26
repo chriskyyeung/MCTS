@@ -14,7 +14,7 @@ class MCTSNode:
             state: GameState, 
             parent: Self = None,
             parent_action: Any = None,
-            log_config: dict = dict(), 
+            log_config: dict = dict(),
         ) -> None:
         """Construct a node to perform MCTS on the input game state
 
@@ -105,60 +105,21 @@ class MCTSNode:
         return self.children[-1]
 
     def selection(self, c: float) -> Self:
-        """Selection step
-
-        Args:
-            c (float): Exploration parameter
-
-        Returns:
-            Self: Selected node
-        """
-        self._c = c
-        current_node = self
-        while (current_node.is_fully_expanded) and (not current_node.is_terminal):
-            current_node = current_node.best_child
-
-        return current_node
+        """Defining the selection step"""
+        raise NotImplementedError("Defining the selection step")
 
     @staticmethod
     def simulation_step(state: GameState) -> Any:
-        """Simulation 1 step forward from the input game state
-
-        Args:
-            state (GameState): Current game state
-
-        Returns:
-            Any: 1 simulated move forward from the current game state
-        """
-        possible_moves = state.get_legal_actions()
-        return possible_moves[np.random.randint(len(possible_moves))]
+        """Defining 1 single simulation step"""
+        raise NotImplementedError("Define 1 single simulation step")
 
     def simulation(self) -> tuple[GameState, Any]:
-        """Simulation, involving multiple simulation steps
+        """Defining the whole simulation process"""
+        raise NotImplementedError("Define the whole simulation process")
 
-        Returns:
-            - tuple[GameState, Any]: A tuple containing
-                1. Final state of the simulated game
-                2. Result, in terms of the score
-        """
-        current_state = self.state
-        while not current_state.is_game_over:
-            action = self.simulation_step(current_state)
-            current_state = current_state.update(action)
-        
-        return current_state, current_state.game_result
-
-    def backpropagate(self, score: int) -> None:
-        """Backpropagation, triggering parent's one if any
-
-        Args:
-            score (int): Score of the current state
-        """
-        self._N += 1
-        self._score[score] += 1
-        if self.parent:
-            self.parent.backpropagate(score*-1)
-        return 
+    def backpropagate(self, score: Any) -> None:
+        """Defining the backpropagation step"""
+        raise NotImplementedError("Define the backpropagate step")
 
     def best_action(self, c:float=0.1, n_simulation:int=100) -> Self:
         """Return the best child as the suggested action
@@ -182,9 +143,5 @@ class MCTSNode:
             final_state, result = node.simulation()
             node.backpropagate(result)
 
-            self.logger.debug(node.state._board)
-            self.logger.debug(final_state._board)
-            self.logger.debug(f"{node._score}, {final_state.game_result}, {result}")
-        
         self._c = 0
         return self.best_child
