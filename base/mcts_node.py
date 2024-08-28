@@ -1,5 +1,6 @@
 from collections import defaultdict
 import logging
+from time import time
 from typing import Self, Any
 
 import numpy as np
@@ -113,26 +114,27 @@ class MCTSNode:
             self.parent.backpropagate(score*-1)
         return 
 
-    def best_action(self, c:float=0.1, n_simulation:int=100) -> Self:
+    def best_action(self, c:float=0.1, simulation_time:float=100) -> Self:
         """Return the best child as the suggested action
 
         Args:
             c (float, optional): Exploration parameter. Defaults to 0.1.
-            n_simulation (int, optional): No. of iterations. Defaults to 100.
+            simlulation_time (float, optional): Simulation time in sec. Defaults to 100.
 
         Returns:
             Self: AI move based on the score of all children
         """
-        for i in range(n_simulation):
-            self.logger.debug("Simulation starts")
+        t0, i = time(), 0
+        while time() - t0 <= simulation_time:
             node = self.selection(c)
 
-            self.logger.debug("Expansion")
             if not node.is_terminal:
                 node = node.expand()
 
             final_state, result = node.simulation()
             node.backpropagate(result)
+            i += 1
 
         self._c = 0
+        self.logger.debug(i)
         return self.best_child()

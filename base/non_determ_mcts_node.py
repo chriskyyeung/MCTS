@@ -1,5 +1,3 @@
-from collections import defaultdict
-import logging
 from typing import Self, Any
 
 import numpy as np
@@ -112,12 +110,7 @@ class NonDetermMCTSNode(MCTSNode):
         self._c = c
         current_node = self
         while (current_node.is_fully_expanded) and (not current_node.is_terminal):
-            x = current_node.best_child()
-            if x is None:
-                print("here")
-            else:
-                current_node = x
-            # current_node = current_node.best_child()
+            current_node = current_node.best_child()
 
         return current_node
 

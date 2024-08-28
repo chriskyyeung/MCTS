@@ -16,16 +16,16 @@ log_config = {
 
 game: list[GameState] = [TicTacToe, Connect4]
 node: list[MCTSNode] = [TicTacToeNode, Connet4Node]
-game_config = [{"c":0.2, "n_simulation": 5000}, {"c":0.5, "n_simulation": 2000}, {"c":1, "n_simulation": 300}]
+game_config = [{"c":0.2, "simulation_time": 10}, {"c":0.5, "simulation_time": 10}, {"c":1, "simulation_time": 30}]
 
-def computer_move(board: GameState, node: MCTSNode, c=1, n_simulation=1000) -> tuple:
+def computer_move(board: GameState, node: MCTSNode, c=1, simulation_time=1000) -> tuple:
     node = node(board, log_config=log_config)
-    best_child = node.best_action(c, n_simulation)
+    best_child = node.best_action(c, simulation_time)
     return best_child.parent_action
 
 def transform(config, sim):
     config['c'] = 0.1 / config['c']
-    config['n_simulation'] = sim - config["n_simulation"]
+    config['simulation_time'] = sim - config["simulation_time"]
 
 if __name__ == "__main__":
     game_id = eval(input("Select game ([1] Tic-tac-toe / [2] Connect-4): ")) - 1
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     board: GameState = game[game_id]()
     board.print()
-    sim = game_config[game_id]["n_simulation"] * 2 #10
+    sim = game_config[game_id]["simulation_time"] * 2 #10
     
     istep = 0
     while not board.is_game_over:
