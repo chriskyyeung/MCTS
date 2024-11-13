@@ -123,7 +123,7 @@ class MCTSNode:
             Self: AI move based on the score of all children
         """
         t0, i_simulation = time(), 0
-        while time() - t0 <= simulation_time and i_simulation <= n_simulation:
+        while time() - t0 <= simulation_time and i_simulation < n_simulation:
             node = self.selection(c)
 
             if not node.is_terminal:
@@ -134,5 +134,5 @@ class MCTSNode:
             i_simulation += 1
 
         self._c = 0
-        self.logger.debug(f"{i_simulation} iteration in {time()-t0} seconds")
+        self.logger.info(f"{i_simulation} iteration in {time()-t0} seconds")
         return self.best_child()

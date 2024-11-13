@@ -42,21 +42,28 @@ class NonDetermMCTSNode(MCTSNode):
             'a': range(len(discrete_states)),
             'p': discrete_states,
         }
-        # self.children = [[None] * len(discrete_states) for _ in range(len(self._untried_actions))]
-        self.children = [[None] * len(discrete_states) for _ in range(3)]
+        
+        # Currently designed for numeric "action" values
+        self._id_to_move = list(set(s[1] for s in self._untried_actions))
+        self._move_to_id = {move: i for i, move in enumerate(self._id_to_move)}
+        self.children = [[None] * len(self._id_to_move) for _ in range(len(discrete_states))]
         pass
 
     @property
     def child_weights(self) -> list:
-        weights = np.repeat(-np.inf, repeats=len(self.children))
-        for inode, chance_node in enumerate(self.children):
-            node_weight, node_N = 0, 0
-            for child in chance_node:
-                if child is not None:
-                    node_weight += child._W
-                    node_N += child._N
+        weights = np.repeat(0, repeats=len(self.children[0]))
+        for irow in range(len(self.children[0])):
+            node_weight = 0
+            node_N = 0
+
+            for istate in range(len(self.children)):
+                if self.children[istate][irow] is not None:
+                    node_weight += self.children[istate][irow]._W
+                    node_N += self.children[istate][irow]._N
+        
             if node_N > 0:
-                weights[inode] = node_weight / node_N + self._c * np.sqrt(2 * np.log(self._N)/ node_N)
+                weights[irow] = node_weight / node_N + self._c * np.sqrt(2 * np.log(self._N)/ node_N)
+    
         return weights
 
     @property
@@ -64,18 +71,26 @@ class NonDetermMCTSNode(MCTSNode):
         """Return a random state based on the random_state_config"""
         raise NotImplementedError("")
 
+    def _get_child_weights_with_state(self, dice: int) -> np.ndarray:
+        weights = np.repeat(-np.inf, repeats=len(self.children[0]))
+        for inode, node in enumerate(self.children[dice]):
+            if node is not None and node._N > 0:
+                weights[inode] = node._W / node._N + self._c * np.sqrt(2 * np.log(self._N)/ node._N)
+        return weights
+
     def _get_action(self) -> list:
-        return (self._untried_actions.pop(), self._random_state)
-        
+        return self._untried_actions.pop()
+    
     def best_child(self) -> Self:
-        irow = np.argmax(self.child_weights)
         dice = self._random_state
-        child = self.children[irow][dice-1]
+        irow = np.argmax(self._get_child_weights_with_state(dice-1))
+        move = self._id_to_move[irow]
+        child = self.children[dice-1][irow]
         if child is None:
             child = self.__class__(
-                self.state.update((irow, dice)),
+                self.state.update((dice, move)),
                 parent=self,
-                parent_action=(irow, dice),
+                parent_action=(dice, move),
                 discrete_states=np.repeat(1/6, repeats=6),
         )
         return child
@@ -90,13 +105,14 @@ class NonDetermMCTSNode(MCTSNode):
             Self: The expanded child node
         """
         action = self._get_action()
-        self.children[action[0]][action[1]-1] =self.__class__(
+        action_id = self._move_to_id[action[1]]
+        self.children[action[0]-1][action_id] =self.__class__(
                 self.state.update(action),
                 parent=self,
                 parent_action=action,
                 discrete_states=np.repeat(1/6, repeats=6),
         )
-        return self.children[action[0]][action[1]-1]
+        return self.children[action[0]-1][action_id]
 
     def selection(self, c: float) -> Self:
         """Selection step
@@ -125,8 +141,9 @@ class NonDetermMCTSNode(MCTSNode):
         Returns:
             Any: 1 simulated move forward from the current game state
         """
-        possible_moves = state.get_legal_actions()
-        return (possible_moves[np.random.randint(len(possible_moves))], random_state)
+        possible_moves = [s for s in state.get_legal_actions() if s[0] == random_state]
+        assigned_move = np.random.randint(len(possible_moves))
+        return possible_moves[assigned_move]
 
     def simulation(self) -> tuple[GameState, Any]:
         """Simulation, involving multiple simulation steps

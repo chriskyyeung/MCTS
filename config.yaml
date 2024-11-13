@@ -10,8 +10,8 @@ main:
       simulation_time: 10
     knucklebones:
       c: 1
-      n_simulation: 30000
-      simulation_time: 10
+      n_simulation: 20
+      simulation_time: 100000
   log_config:
     filemode: w
     level: 20 # DEBUG: 10, INFO: 20, ERROR = 40

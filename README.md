@@ -21,8 +21,9 @@ Implementation of MCTS on
 
 ## Observation
 1. Close loop MCTS on tic-tac-toe
-  - Acceptable performance from the dropping winning rate trend
+   - Acceptable performance from the dropping winning rate trend
 2. Close loop MCTS on Connect-4
-  - Didn't observe a significant advantage on 1st player
+   - Didn't observe a significant advantage on 1st player
 3. MCTS on Knuckle
-  - Close loop doesn't perform well
+   - Fixed close loop issues
+     - Unfully expansion causes AI tends not to cancel out opponents dice

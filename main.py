@@ -14,11 +14,6 @@ from tictactoe.tictactoe_node import TicTacToeNode
 
 game: list[GameState] = [TicTacToe, Connect4, Knucklebones]
 node: list[MCTSNode | NonDetermMCTSNode] = [TicTacToeNode, Connet4Node, KnucklebonesNode]
-game_config: list[dict] = [
-    {"c":1, "n_simulation": 100, "simulation_time": 5}, # tic-tac-toe
-    {"c":1, "n_simulation": float("inf"), "simulation_time": 10}, # connect4
-    {"c":1, "n_simulation": 30000, "simulation_time": 10}, # Knucklebones
-]
 
 def computer_move(
         board: GameState, 
@@ -50,7 +45,7 @@ if __name__ == "__main__":
     with open("config.yaml") as f:
         config = yaml.safe_load(f)["main"]
     
-    game_list = ["tictactoe", "connect4", "Knucklebones"]
+    game_list = ["tictactoe", "connect4", "knucklebones"]
     game_id = eval(input("Select game ([1] Tic-tac-toe / [2] Connect-4 / [3] Knucklebones): ")) - 1
     game_mode = eval(input("Select mode ([1] PVE / [2] EVP / [3] EVE): "))
 
@@ -67,7 +62,7 @@ if __name__ == "__main__":
 
         if (game_mode < 3) and (istep % 2) == 0:
             if game_id == 2:
-                action = (board.prompt_next_move(), n)
+                action = (n, board.prompt_next_move())
             else:
                 action = board.prompt_next_move()
         else:

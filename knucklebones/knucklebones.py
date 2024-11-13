@@ -1,3 +1,4 @@
+from itertools import product
 import numpy as np
 
 from base.game_state import GameState
@@ -16,8 +17,8 @@ class Knucklebones(GameState):
         self._count = np.zeros(7, dtype=int)
 
         self._layer_status = np.zeros(2, dtype=int) # check if the board is full
-        self._row_score   = np.zeros((2,3), dtype=int) # Row scores
-        self._nxt_row      = np.zeros((2,3), dtype=int)
+        self._row_score = np.zeros((2,3), dtype=int) # Row scores
+        self._nxt_row = np.zeros((2,3), dtype=int) # Next position of each row
 
 
     @property
@@ -41,15 +42,19 @@ class Knucklebones(GameState):
                   - and 0 means draw
         """
         player_score = np.sum(self._row_score, axis=1)
-        # For 300 game, mean diff = 15.62, mean sd = 10.75
-        return min(max((player_score[0] - player_score[1]) / 10, -1), 1)
+        if player_score[0] == player_score[1]:
+            return 0
+        elif player_score[0] > player_score[1]:
+            return 1
+        else:
+            return -1
 
-    def _is_valid_move(self, irow: int, dice: int) -> bool:
+    def _is_valid_move(self, dice: int, irow: int) -> bool:
         """Check if the input row is invalid/full
 
         Args:
-            irow (int): Which row would the dice be placed
             dice (int): The value of the dice
+            irow (int): Which row would the dice be placed
 
         Returns:
             bool: Whether the move is valid
@@ -90,7 +95,7 @@ class Knucklebones(GameState):
         Args:
             action (tuple[int, int]): (irow, dice)
         """
-        irow, this_move = action
+        this_move, irow = action
         self._tidy_up_row(self._moveID, irow, 1)
 
         # Check if any removal on opponent's layer
@@ -118,8 +123,8 @@ class Knucklebones(GameState):
         Returns:
             np.ndarray: The new game board
         """
-        irow, dice = action
-        assert self._is_valid_move(irow, dice)
+        dice, irow = action
+        assert self._is_valid_move(dice, irow)
 
         self._board[self._moveID, irow, self._nxt_row[self._moveID, irow]] = dice
         self._update_status(action)
@@ -132,9 +137,9 @@ class Knucklebones(GameState):
             NotImplementedError: Legal action generation is a must
 
         Returns:
-            list: All legal actions on position, without the dice value
+            list: All legal actions, in the form of (dice, position)
         """
-        return np.where(self._nxt_row[self._moveID, :] < 3)[0].tolist()
+        return list(product(Knucklebones._dice[1:], np.where(self._nxt_row[self._moveID, :] < 3)[0]))
 
     @staticmethod
     def _get_row_output(row: np.ndarray) -> str:
