@@ -1,6 +1,3 @@
-from copy import deepcopy
-from typing import Self
-
 import numpy as np
 
 from base.game_state import GameState

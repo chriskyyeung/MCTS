@@ -1,7 +1,5 @@
 from typing import Self
 
-import numpy as np
-
 from base.determ_mcts_node import DetermMCTSNode
 
 class TicTacToeNode(DetermMCTSNode):

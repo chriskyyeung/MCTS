@@ -1,5 +1,3 @@
-from collections import defaultdict
-import logging
 from typing import Self, Any
 
 import numpy as np

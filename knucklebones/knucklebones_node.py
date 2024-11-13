@@ -1,8 +1,5 @@
 from typing import Self
 
-import numpy as np
-
-from base.game_state import GameState
 from base.non_determ_mcts_node import NonDetermMCTSNode
 
 class KnucklebonesNode(NonDetermMCTSNode):
