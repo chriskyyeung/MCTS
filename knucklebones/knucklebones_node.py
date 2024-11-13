@@ -1,25 +1,20 @@
 from typing import Self
 
-import numpy as np
+from base.non_determ_mcts_node import NonDetermMCTSNode
 
-from base.mcts_node import MCTSNode
-
-class KnucklebonesNode(MCTSNode):
+class KnucklebonesNode(NonDetermMCTSNode):
     """MCTS node for a KnuckleBones Game
     """
     _check = [1, -1]
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self._dice = [1,2,3,4,5,6]
         pass
 
     @property
-    def W(self) -> float:
-        """Numerator of the exploitation part
-
-        Returns:
-            float: Sum of score of all simulated situations
-        """
-        return np.sum([k*v for k,v in self._score.items()])
+    def _random_state(self) -> int:
+        return self._dice[self._get_random_state_index(1)]
+            
 
     def simulation(self) -> tuple[Self, int]:
         """Simulation process in one MCTS iteraction
@@ -31,23 +26,3 @@ class KnucklebonesNode(MCTSNode):
         """
         state, result = super().simulation()
         return state,  result * KnucklebonesNode._check[self.state._moveID]
-
-    def selection(self, c: float) -> Self:
-        """Override the parent class method for debugging
-
-        Args:
-            c (float): The exploration parameter
-
-        Returns:
-            Self: Current node fater the process
-        """
-        current_node = super().selection(c)
-
-        node = current_node
-        msg = f"\n{node.state._board}]\nScore: {node.W}"
-        while node.parent:
-            node = node.parent
-            msg = f"\n{node.state._board}]\nScore: {node.W}" + msg
-        
-        self.logger.debug(msg)
-        return current_node

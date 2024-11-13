@@ -1,8 +1,6 @@
-from collections import defaultdict
 import logging
+from time import time
 from typing import Self, Any
-
-import numpy as np
 
 from base.game_state import GameState
 
@@ -43,19 +41,9 @@ class MCTSNode:
         self.children = []
         self._N = 0
         self._c = 0
-        self._score = defaultdict(int)
+        self._W = 0
         self._untried_actions = self.get_untried_actions()
         pass
-
-    @property
-    def N(self) -> int:
-        # Total game played
-        return self._N
-
-    @property
-    def W(self) -> float:
-        # Winning counts
-        return self._score[1]
 
     @property
     def is_terminal(self) -> bool:
@@ -66,20 +54,14 @@ class MCTSNode:
     def is_fully_expanded(self) -> bool:
         # Check if the expansion is done
         return len(self._untried_actions) == 0
+    
+    def _get_action(self) -> Any:
+        # Get a action for updating the game state
+        raise NotImplementedError
 
-    @property
-    def child_weights(self) -> list:
-        # Weights of every children
-        return  np.array([
-            child.W / child.N + self._c * np.sqrt(2 * np.log(self.N) / child.N)
-            for child in self.children
-        ])
-
-    @property
     def best_child(self) -> Self:
-        # Select the best child
-        return self.children[np.argmax(self.child_weights)]
-
+        raise NotImplementedError
+    
     def get_untried_actions(self) -> list:
         """Retrieve all un-tried actions for expansion
 
@@ -94,7 +76,7 @@ class MCTSNode:
         Returns:
             Self: The expanded child node
         """
-        action = self._untried_actions.pop()
+        action = self._get_action()
         self.children.append(
             self.__class__(
                 self.state.update(action),
@@ -117,31 +99,40 @@ class MCTSNode:
         """Defining the whole simulation process"""
         raise NotImplementedError("Define the whole simulation process")
 
-    def backpropagate(self, score: Any) -> None:
-        """Defining the backpropagation step"""
-        raise NotImplementedError("Define the backpropagate step")
+    def backpropagate(self, score: Any) -> None:    
+        """Backpropagation, triggering parent's one if any
 
-    def best_action(self, c:float=0.1, n_simulation:int=100) -> Self:
+        Args:
+            score (int): Score of the current state
+        """
+        self._N += 1
+        self._W += score
+        if self.parent:
+            self.parent.backpropagate(score*-1)
+        return 
+
+    def best_action(self, c:float=0.1, simulation_time:float=1, n_simulation:float=100) -> Self:
         """Return the best child as the suggested action
 
         Args:
             c (float, optional): Exploration parameter. Defaults to 0.1.
-            n_simulation (int, optional): No. of iterations. Defaults to 100.
+            simulation_time (float, optional): Max. time for MCTS. Defaults to 1
+            n_simulation (int, optional): Max no. of MCTS simulations to be performed. Defaults to 100
 
         Returns:
             Self: AI move based on the score of all children
         """
-        for _ in range(n_simulation):
-            self.logger.debug("Simulation starts")
+        t0, i_simulation = time(), 0
+        while time() - t0 <= simulation_time and i_simulation <= n_simulation:
             node = self.selection(c)
-            
 
-            self.logger.debug("Expansion")
             if not node.is_terminal:
                 node = node.expand()
 
             final_state, result = node.simulation()
             node.backpropagate(result)
+            i_simulation += 1
 
         self._c = 0
-        return self.best_child
+        self.logger.debug(f"{i_simulation} iteration in {time()-t0} seconds")
+        return self.best_child()

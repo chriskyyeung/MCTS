@@ -1,6 +1,3 @@
-from copy import deepcopy
-from typing import Self, Any
-
 import numpy as np
 
 from base.game_state import GameState
@@ -33,22 +30,19 @@ class Knucklebones(GameState):
         return np.any(self._layer_status == 9)
 
     @property
-    def game_result(self) -> int:
+    def game_result(self) -> float:
         """Result of the game and should be called at the game end
 
         Returns:
+            float : The normalised score difference of 2 players
             int : Score of the current game
                   - 1 means first-player wins, 
                   - -1 means second-player wins
                   - and 0 means draw
         """
         player_score = np.sum(self._row_score, axis=1)
-        if player_score[0] > player_score[1]:
-            return 1
-        elif player_score[0] < player_score[1]:
-            return -1
-        else:
-            return 0
+        # For 300 game, mean diff = 15.62, mean sd = 10.75
+        return min(max((player_score[0] - player_score[1]) / 10, -1), 1)
 
     def _is_valid_move(self, irow: int, dice: int) -> bool:
         """Check if the input row is invalid/full
@@ -138,11 +132,9 @@ class Knucklebones(GameState):
             NotImplementedError: Legal action generation is a must
 
         Returns:
-            np.ndarray: All legal actions under the current game state
+            list: All legal actions on position, without the dice value
         """
-        valid_row = np.where(self._nxt_row[self._moveID, :] < 3)[0]
-        moves = [(r,d) for r in valid_row for d in range(1,7)]
-        return moves
+        return np.where(self._nxt_row[self._moveID, :] < 3)[0].tolist()
 
     @staticmethod
     def _get_row_output(row: np.ndarray) -> str:
@@ -168,6 +160,8 @@ class Knucklebones(GameState):
                 + self._get_row_output(self._board[1, irow, :])
             )
             print(row)
+        score = " {:02d}|{:02d} ".format(*np.sum(self._row_score, axis=1))
+        print("{space}{score}".format(space=" "*7, score=score))
         print()
     
     @staticmethod

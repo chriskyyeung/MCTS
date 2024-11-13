@@ -1,0 +1,57 @@
+main:
+  game_config:
+    tictactoe:
+      c: 1
+      n_simulation: 100
+      simulation_time: 5
+    connect4:
+      c: 1
+      n_simulation: 100000000
+      simulation_time: 10
+    knucklebones:
+      c: 1
+      n_simulation: 30000
+      simulation_time: 10
+  log_config:
+    filemode: w
+    level: 20 # DEBUG: 10, INFO: 20, ERROR = 40
+    format: "%(asctime)s [%(levelname)s] : %(message)s"
+
+EVE:
+  nproc: 5
+  game_id: 0
+  n_round: 50
+  game_config:
+    tictactoe:
+      c:
+        - 1
+      simulation_time:
+        - 100000
+      n_simulation:
+        - 25
+        - 50
+        - 100
+        - 500
+        - 1000
+    connect4:
+      c:
+        - 1
+      simulation_time:
+        - 100000
+      n_simulation:
+        - 100
+        - 250
+        - 500
+        - 1000
+        - 2000
+    knucklebones:
+      c: 
+        - 1
+      simulation_time:
+        - 100000
+      n_simulation:
+        - 30
+  log_config:
+    filemode: w
+    level: 20 # DEBUG: 10, INFO: 20, ERROR = 40
+    format: "%(asctime)s [%(levelname)s] : %(message)s"
