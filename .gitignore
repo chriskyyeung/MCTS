@@ -4,5 +4,6 @@ __pycache__
 
 # File extension
 *.npy
+*.log
 
 # File

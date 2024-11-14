@@ -46,7 +46,8 @@ class DetermMCTSNode(MCTSNode):
 
     def best_child(self) -> Self:
         # Select the best child
-        return self.children[np.argmax(self.child_weights)]
+        w = self.child_weights
+        return self.children[np.random.choice(np.where(w == max(w))[0])]
         
     def selection(self, c: float) -> Self:
         """Selection step
@@ -61,6 +62,7 @@ class DetermMCTSNode(MCTSNode):
         current_node = self
         while (current_node.is_fully_expanded) and (not current_node.is_terminal):
             current_node = current_node.best_child()
+            current_node._c = c
 
         return current_node
 
