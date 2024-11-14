@@ -130,6 +130,7 @@ class Knucklebones(GameState):
         self._update_status(action)
         return self._board
 
+
     def get_legal_actions(self) -> list:
         """To return legal actions of the current game state
 
@@ -140,6 +141,14 @@ class Knucklebones(GameState):
             list: All legal actions, in the form of (dice, position)
         """
         return list(product(Knucklebones._dice[1:], np.where(self._nxt_row[self._moveID, :] < 3)[0]))
+    
+    def _get_all_actions(self) -> list:
+        """To return all actions, regardless of its validity
+
+        Returns:
+            list: All actions
+        """
+        return list(range(3))
 
     @staticmethod
     def _get_row_output(row: np.ndarray) -> str:

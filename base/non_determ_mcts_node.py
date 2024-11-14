@@ -72,28 +72,24 @@ class NonDetermMCTSNode(MCTSNode):
         raise NotImplementedError("")
 
     def _get_child_weights_with_state(self, dice: int) -> np.ndarray:
-        weights = np.repeat(-np.inf, repeats=len(self.children[0]))
+        weights = -np.inf
         for inode, node in enumerate(self.children[dice]):
             if node is not None and node._N > 0:
-                weights[inode] = node._W / node._N + self._c * np.sqrt(2 * np.log(self._N)/ node._N)
-        return weights
+                w = node._W / node._N + self._c * np.sqrt(2 * np.log(self._N)/ node._N)
+                if w > weights:
+                    weights = w
+                    max_node = [inode]
+                elif w == weights:
+                    max_node.append(inode)
+        return np.random.choice(max_node)
 
     def _get_action(self) -> list:
         return self._untried_actions.pop()
     
     def best_child(self) -> Self:
         dice = self._random_state
-        irow = np.argmax(self._get_child_weights_with_state(dice-1))
-        move = self._id_to_move[irow]
-        child = self.children[dice-1][irow]
-        if child is None:
-            child = self.__class__(
-                self.state.update((dice, move)),
-                parent=self,
-                parent_action=(dice, move),
-                discrete_states=np.repeat(1/6, repeats=6),
-        )
-        return child
+        irow = self._get_child_weights_with_state(dice-1)
+        return self.children[dice-1][irow]
 
     def _get_random_state_index(self, size: int) -> int:
         return np.random.choice(size=size, **self._random_state_config)[0]
@@ -127,6 +123,7 @@ class NonDetermMCTSNode(MCTSNode):
         current_node = self
         while (current_node.is_fully_expanded) and (not current_node.is_terminal):
             current_node = current_node.best_child()
+            current_node._c = c
 
         return current_node
 
