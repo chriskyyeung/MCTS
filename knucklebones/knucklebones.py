@@ -9,8 +9,9 @@ class Knucklebones(GameState):
     _dice = np.array(range(7), dtype=int)
     _token = ["_"] + [i for i in range(1,7)]
 
-    def __init__(self) -> None:
+    def __init__(self, use_close_loop:bool = True) -> None:
         super().__init__()
+        self.use_close_loop = use_close_loop
 
         self._board = np.zeros((2,3,3), dtype=int)
         self._moveID = 0
@@ -140,7 +141,11 @@ class Knucklebones(GameState):
         Returns:
             list: All legal actions, in the form of (dice, position)
         """
-        return list(product(Knucklebones._dice[1:], np.where(self._nxt_row[self._moveID, :] < 3)[0]))
+        valid_move = np.where(self._nxt_row[self._moveID, :] < 3)[0]
+        if self.use_close_loop:
+            return list(product(Knucklebones._dice[1:], valid_move))
+        else:
+            return valid_move.tolist()
     
     def _get_all_actions(self) -> list:
         """To return all actions, regardless of its validity

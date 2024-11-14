@@ -42,6 +42,9 @@ class GameState:
         """
         raise NotImplementedError("Check the game state and return the score/result of the game")
 
+    def _is_valid_move(self, *args) -> bool:
+        raise NotImplementedError("Check if the move is compatible with the game state")
+
     def _move(self, action: Any) -> Any:
         """Make the input move on the board and update the game status
 
@@ -56,6 +59,13 @@ class GameState:
         """
         raise NotImplementedError("Please implement this function for updating a move")
 
+    def _get_all_actions(self) -> list:
+        """To return all actions, regardless of its validity
+
+        Returns:
+            list: All actions
+        """
+        pass
 
     def get_legal_actions(self) -> list:
         """To return legal actions of the current game state

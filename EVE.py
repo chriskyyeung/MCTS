@@ -1,3 +1,4 @@
+from functools import partial
 from itertools import product
 from multiprocessing import Pool
 import logging
@@ -13,12 +14,13 @@ from connect4.connect4_node import Connet4Node
 from game import Game
 from knucklebones.knucklebones import Knucklebones
 from knucklebones.knucklebones_node import KnucklebonesNode
+from knucklebones.knucklebones_openloop_node import KnucklebonesOpenLoopNode
 from tictactoe.tictactoe import TicTacToe
 from tictactoe.tictactoe_node import TicTacToeNode
 
-game: list[GameState] = [TicTacToe, Connect4, Knucklebones]
-node: list[MCTSNode] = [TicTacToeNode, Connet4Node, KnucklebonesNode]
-game_name: list[str] = ["tictactoe", "connect4", "knucklebones"]
+game: list[GameState] = [TicTacToe, Connect4, Knucklebones, partial(Knucklebones,False)]
+node: list[MCTSNode] = [TicTacToeNode, Connet4Node, KnucklebonesNode, KnucklebonesOpenLoopNode]
+game_name: list[str] = ["tictactoe", "connect4", "knucklebones", "knucklebones_open"]
 
 def eve_simulation(game_id: int, game_config: dict, first_hand: int, second_hand: int, n_round: int, log_config: dict) -> tuple:
     msg = ""

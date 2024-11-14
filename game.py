@@ -1,3 +1,4 @@
+from functools import partial
 import numpy as np
 import yaml
 
@@ -8,15 +9,16 @@ from connect4.connect4 import Connect4
 from connect4.connect4_node import Connet4Node
 from knucklebones.knucklebones import Knucklebones
 from knucklebones.knucklebones_node import KnucklebonesNode
+from knucklebones.knucklebones_openloop_node import KnucklebonesOpenLoopNode
 from tictactoe.tictactoe import TicTacToe
 from tictactoe.tictactoe_node import TicTacToeNode
 
 class Game:
     def __init__(self) -> None:
-        self.game: list[GameState] = [TicTacToe, Connect4, Knucklebones]
-        self.node: list[MCTSNode] = [TicTacToeNode, Connet4Node, KnucklebonesNode]
-        self.game_name: list[str] = ["tictactoe", "connect4", "knucklebones"]
-        self.dice: list[int] = [-1, -1, 6]
+        self.game: list[GameState] = [TicTacToe, Connect4, Knucklebones, partial(Knucklebones,False)]
+        self.node: list[MCTSNode] = [TicTacToeNode, Connet4Node, KnucklebonesNode, KnucklebonesOpenLoopNode]
+        self.game_name: list[str] = ["tictactoe", "connect4", "knucklebones", "knucklebones"]
+        self.dice: list[int] = [-1, -1, 6, 6]
         pass
 
     def load_config(self, section) -> None:
