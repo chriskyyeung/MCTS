@@ -134,5 +134,5 @@ class MCTSNode:
             i_simulation += 1
 
         self._c = 0
-        self.logger.info(f"{i_simulation} iteration in {time()-t0} seconds")
+        self.logger.debug(f"{i_simulation} iteration in {time()-t0} seconds")
         return self.best_child()
