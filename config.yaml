@@ -2,12 +2,12 @@ main:
   game_config:
     tictactoe:
       c: 1
-      n_simulation: 1000
+      n_simulation: 500
       simulation_time: 5
     connect4:
       c: 1
-      n_simulation: 99999999
-      simulation_time: 15
+      n_simulation: 1000
+      simulation_time: 99999
     knucklebones:
       c: 1
       n_simulation: 5000
@@ -18,7 +18,7 @@ main:
 
 EVE:
   nproc: 8
-  game_id: 3
+  game_id: 0
   n_round: 50
   game_config:
     tictactoe:
@@ -30,8 +30,9 @@ EVE:
         - 25
         - 50
         - 100
-        - 500
-        - 1000
+        - 200
+        # - 500
+        # - 1000
     connect4:
       c:
         - 1

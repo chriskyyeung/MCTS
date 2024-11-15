@@ -38,10 +38,7 @@ class NonDetermMCTSNode(MCTSNode):
         super().__init__(state, parent, parent_action, log_config)
 
         # Handling random state
-        self._random_state_config = {
-            'a': range(len(discrete_states)),
-            'p': discrete_states,
-        }
+        self._set_random_state(discrete_states)
         
         # Currently designed for numeric "action" values
         self._id_to_move = list(set(s[1] for s in self._untried_actions))
@@ -71,6 +68,20 @@ class NonDetermMCTSNode(MCTSNode):
         """Return a random state based on the random_state_config"""
         raise NotImplementedError("")
 
+    def get_child_by_action(self, action) -> Self:
+        for child in self.children[action[0]-1]:
+            if child.parent_action == action:
+                return child
+        return None
+
+    def _set_random_state(self, discrete_states) -> None:
+        # Handling random state
+        self._random_state_config = {
+            'a': range(len(discrete_states)),
+            'p': discrete_states,
+        }
+        return
+
     def _get_child_weights_with_state(self, dice: int) -> np.ndarray:
         weights = -np.inf
         for inode, node in enumerate(self.children[dice]):
@@ -90,6 +101,13 @@ class NonDetermMCTSNode(MCTSNode):
         dice = self._random_state
         irow = self._get_child_weights_with_state(dice-1)
         return self.children[dice-1][irow]
+
+    def update_node_N(self) -> None:
+        self._N = 0
+        for i, p in enumerate(self._random_state_config["p"]):
+            if p > 0:
+                self._N += np.sum(c._N for c in self.children[i] if c)
+        return
 
     def _get_random_state_index(self, size: int) -> int:
         return np.random.choice(size=size, **self._random_state_config)[0]

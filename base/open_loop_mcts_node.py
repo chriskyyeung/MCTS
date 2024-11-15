@@ -37,10 +37,7 @@ class OpenLoopMCTSNode(MCTSNode):
         super().__init__(state, parent, parent_action, log_config)
 
         # Handling random state
-        self._random_state_config = {
-            'a': range(len(discrete_states)),
-            'p': discrete_states,
-        }
+        self._set_random_state(discrete_states)
         
         # Currently designed for numeric "action" values
         self._id_to_move = state._get_all_actions()
@@ -70,6 +67,17 @@ class OpenLoopMCTSNode(MCTSNode):
     def _random_state(self) -> Any:
         """Return a random state based on the random_state_config"""
         raise NotImplementedError("")
+
+    def get_child_by_action(self, action) -> Self:
+        return self.children[self._move_to_id[action[1]]]
+
+    def _set_random_state(self, discrete_states) -> None:
+        # Handling random state
+        self._random_state_config = {
+            'a': range(len(discrete_states)),
+            'p': discrete_states,
+        }
+        return
 
     def _get_action(self) -> list:
         return self._untried_actions.pop()

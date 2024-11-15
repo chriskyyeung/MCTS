@@ -49,6 +49,12 @@ class DetermMCTSNode(MCTSNode):
         w = self.child_weights
         return self.children[np.random.choice(np.where(w == max(w))[0])]
         
+    def get_child_by_action(self, action) -> Self:
+        for child in self.children:
+            if child.parent_action == action:
+                return child
+        return None
+
     def selection(self, c: float) -> Self:
         """Selection step
 

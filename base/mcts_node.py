@@ -59,6 +59,9 @@ class MCTSNode:
         # Get a action for updating the game state
         raise NotImplementedError
 
+    def update_node_N(self) -> None:
+        pass
+
     def best_child(self) -> Self:
         raise NotImplementedError
     

@@ -14,7 +14,6 @@ class KnucklebonesNode(NonDetermMCTSNode):
     @property
     def _random_state(self) -> int:
         return self._dice[self._get_random_state_index(1)]
-            
 
     def simulation(self) -> tuple[Self, int]:
         """Simulation process in one MCTS iteraction

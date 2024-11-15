@@ -35,14 +35,17 @@ def eve_simulation(game_id: int, game_config: dict, first_hand: int, second_hand
 
     result = [0, 0, 0]
     for _ in tqdm(range(n_round)):
+        players = [[game_config[first_hand], None], [game_config[second_hand], None]]
         game.initialize_board()
 
         turn = 0
         while not game.board.is_game_over:
-            if turn % 2 == 0:
-                game.run_turn(game_config[first_hand], False)
-            else:
-                game.run_turn(game_config[second_hand], False)
+            if players[turn % 2][1]:
+                players[turn % 2][1] = players[turn % 2][1].get_child_by_action(action)
+                if players[turn % 2][1]:
+                    players[turn % 2][1].state = game.board
+            players[turn % 2][1], action = game.run_turn(*players[turn % 2], False)
+
             turn += 1
 
         result[int(game.board.game_result)] += 1
