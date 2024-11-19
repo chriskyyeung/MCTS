@@ -40,7 +40,7 @@ class OpenLoopMCTSNode(MCTSNode):
         self._set_random_state(discrete_states)
         
         # Currently designed for numeric "action" values
-        self._id_to_move = state._get_all_actions()
+        self._id_to_move = state.initialize_actions()
         self._move_to_id = {move: i for i, move in enumerate(self._id_to_move)}
         self.children = [None] * len(self._id_to_move)
         pass

@@ -82,8 +82,7 @@ class DetermMCTSNode(MCTSNode):
         Returns:
             Any: 1 simulated move forward from the current game state
         """
-        possible_moves = state.get_legal_actions()
-        return possible_moves[np.random.randint(len(possible_moves))]
+        return state.all_actions[np.random.randint(state.legal_index)]
 
     def simulation(self) -> tuple[GameState, Any]:
         """Simulation, involving multiple simulation steps

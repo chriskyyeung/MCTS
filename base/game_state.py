@@ -6,6 +6,9 @@ from typing import Self, Any
 
 class GameState:
     def __init__(self) -> None:
+        self.is_game_over = False
+        self.all_actions = self.initialize_actions()
+        self.set_legal_action_index()
         pass
 
     def __deepcopy__(self, memo) -> Self:
@@ -24,12 +27,8 @@ class GameState:
             setattr(self_copy, k, deepcopy(v, memo))
         return self_copy
 
-    @property
-    def is_game_over(self) -> bool:
-        """Whether the game ends
-
-        Returns:
-            bool: Does the game end
+    def check_game_over(self) -> None:
+        """Update self.is_game_over according to whether the game ends
         """
         raise NotImplementedError("Game over determination has to be defined")
 
@@ -59,13 +58,22 @@ class GameState:
         """
         raise NotImplementedError("Please implement this function for updating a move")
 
-    def _get_all_actions(self) -> list:
+    def initialize_actions(self) -> list:
         """To return all actions, regardless of its validity
 
         Returns:
             list: All actions
         """
-        pass
+        raise NotImplementedError("Please implement this function for listing all actions")
+
+    def set_legal_action_index(self) -> list:
+        self.legal_index = []
+
+        if not self.is_game_over:
+            for i, action in enumerate(self.all_actions):
+                if self._is_valid_move(action):
+                    self.legal_index.append(i)
+        return
 
     def get_legal_actions(self) -> list:
         """To return legal actions of the current game state
@@ -73,7 +81,7 @@ class GameState:
         Returns:
             list: All legal actions under the current game state
         """
-        raise NotImplementedError("Generation of legal actions has to be defined")
+        return [self.all_actions[i] for i in self.legal_index]
 
     def update(self, action: Any) -> Self:
         """Update the game state and return a deepcopy of the state
@@ -86,6 +94,8 @@ class GameState:
         """
         temp = deepcopy(self)
         temp._board = temp._move(action)
+        temp.check_game_over()
+        temp.set_legal_action_index()
         return temp
 
     def print(self) -> None:

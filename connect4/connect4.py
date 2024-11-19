@@ -12,18 +12,19 @@ class Connect4(GameState):
     def __init__(self) -> None:
         """To construct the game state in the beginning
         """
-        super().__init__()
-
         # Basic board setting
+        self._turnID = 1
         self._board = np.zeros((6,7), dtype=int)
-        self._turnID= 1
-        self._next  = np.zeros(7, dtype=int)
 
         # Game status check
+        self._next = np.zeros(7, dtype=int)
         self._row_status = np.zeros((6,4), dtype=int)
         self._col_status = np.zeros((3,7), dtype=int)
         self._leftDiag_status = np.zeros((3,4), dtype=int)
         self._rightDiag_status = np.zeros((3,4), dtype=int)
+
+        # Call parent class to initialize action
+        super().__init__()
         pass
 
     @property
@@ -40,8 +41,7 @@ class Connect4(GameState):
             *self._rightDiag_status.flatten(),
         )
 
-    @property
-    def is_game_over(self) -> bool:
+    def check_game_over(self) -> None:
         """Whether the game ends
 
         Returns:
@@ -49,14 +49,16 @@ class Connect4(GameState):
         """
         # Check draw
         if np.all(self._board != 0):
-            return True
+            self.is_game_over = True
+            return
         
         # Check row, col, left diag, right diag
         for status in self.status:
             if (np.abs(status) == 4):
-                return True
-        
-        return False
+                self.is_game_over = True
+                return
+
+        return
 
     @property
     def game_result(self) -> int:
@@ -75,6 +77,9 @@ class Connect4(GameState):
         
         return 0
 
+    def initialize_actions(self) -> list:
+        return [i for i in range(7)]
+
     def _is_valid_move(self, j: int) -> bool:
         """Check if the input column is invalid or full
 
@@ -86,19 +91,6 @@ class Connect4(GameState):
         """
         return (j < 7) and (self._next[j] < 6)
 
-    def get_legal_actions(self) -> list[int]:
-        """To return legal actions of the current game state
-
-        Returns:
-            list[int]: All legal actions under the current game state
-        """
-        moves = []
-        if not self.is_game_over:
-            for j in range(len(self._next)):
-                if self._is_valid_move(j):
-                    moves.append(j)
-        return moves
-    
     def _update_status(self, j: int) -> None:
         """Update the status variables after a move
 

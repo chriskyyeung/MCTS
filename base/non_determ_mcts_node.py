@@ -70,7 +70,7 @@ class NonDetermMCTSNode(MCTSNode):
 
     def get_child_by_action(self, action) -> Self:
         for child in self.children[action[0]-1]:
-            if child.parent_action == action:
+            if child and child.parent_action == action:
                 return child
         return None
 

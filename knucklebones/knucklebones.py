@@ -10,26 +10,29 @@ class Knucklebones(GameState):
     _token = ["_"] + [i for i in range(1,7)]
 
     def __init__(self, use_close_loop:bool = True) -> None:
-        super().__init__()
-        self.use_close_loop = use_close_loop
-
+        # Basic board setting
         self._board = np.zeros((2,3,3), dtype=int)
         self._moveID = 0
         self._count = np.zeros(7, dtype=int)
+        self.use_close_loop = use_close_loop
 
+        # Status check must be placed before calling parent class
         self._layer_status = np.zeros(2, dtype=int) # check if the board is full
         self._row_score = np.zeros((2,3), dtype=int) # Row scores
         self._nxt_row = np.zeros((2,3), dtype=int) # Next position of each row
 
+        # Call parent class to initialize actions
+        super().__init__()
+        pass
 
-    @property
-    def is_game_over(self) -> bool:
+    def check_game_over(self) -> None:
         """Whether the game ends
 
         Returns:
             bool: Does the game end
         """
-        return np.any(self._layer_status == 9)
+        self.is_game_over = np.any(self._layer_status == 9)
+        return
 
     @property
     def game_result(self) -> float:
@@ -141,19 +144,28 @@ class Knucklebones(GameState):
         Returns:
             list: All legal actions, in the form of (dice, position)
         """
-        valid_move = np.where(self._nxt_row[self._moveID, :] < 3)[0]
+        valid_move = super().get_legal_actions()
         if self.use_close_loop:
             return list(product(Knucklebones._dice[1:], valid_move))
         else:
-            return valid_move.tolist()
+            return valid_move
     
-    def _get_all_actions(self) -> list:
+    def initialize_actions(self) -> list:
         """To return all actions, regardless of its validity
 
         Returns:
             list: All actions
         """
         return list(range(3))
+
+    def set_legal_action_index(self) -> None:
+        self.legal_index = []
+
+        if not self.is_game_over:
+            for i, action in enumerate(self.all_actions):
+                if self._is_valid_move(1, action):
+                    self.legal_index.append(i)
+        return
 
     @staticmethod
     def _get_row_output(row: np.ndarray) -> str:

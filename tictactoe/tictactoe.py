@@ -6,39 +6,33 @@ class TicTacToe(GameState):
     def __init__(self) -> None:
         """To construct the game state in the beginning
         """
-        super().__init__()
+        # Basic board setting
         self._board = np.zeros((3,3))
         self._turnID = 1
+
+        # Game status check
         self._row_status = np.zeros(3, dtype=int)
         self._col_status = np.zeros(3, dtype=int)
         self._diag_status = np.zeros(2, dtype=int)
+
+        # Call parent class to initialize action
+        super().__init__()
         pass
 
-    @property
-    def is_game_over(self) -> bool:
+    def check_game_over(self) -> bool:
         """Whether the game ends
 
         Returns:
             bool: Does the game end?
         """
-
-        # Check draw
-        if np.all(self._board != 0):
-            return True
-        
-        # Check row
-        if np.any(np.abs(self._row_status) == 3):
-            return True
-        
-        # Check column
-        if np.any(np.abs(self._col_status) == 3):
-            return True
-        
-        # Check diagonal
-        if np.any(np.abs(self._diag_status) == 3):
-            return True
-
-        return False
+        # Check 1) draw, 2) row, 3) column, 4) diagonal
+        self.is_game_over = (
+            np.all(self._board != 0) \
+            or np.any(np.abs(self._row_status) == 3) \
+            or np.any(np.abs(self._col_status) == 3) \
+            or np.any(np.abs(self._diag_status) == 3)
+        )
+        return
 
     @property
     def game_result(self) -> int:
@@ -56,7 +50,7 @@ class TicTacToe(GameState):
                 return r // 3
         return 0
 
-    def _is_valid_move(self, i: int, j: int) -> bool:
+    def _is_valid_move(self, action: tuple[int, int]) -> bool:
         """Check if the input coordinate is a valid move
 
         Args:
@@ -66,18 +60,11 @@ class TicTacToe(GameState):
         Returns:
             bool: Whether the move is valid
         """
+        i, j = action
         return self._board[i,j] == 0
 
-    def get_legal_actions(self) -> list[tuple[int, int]]:
-        """To return legal actions of the current game state
-
-        Returns:
-            list[tuple[int, int]]: All legal actions under the current game state
-        """
-        moves = []
-        for i, j in zip(*np.where(self._board == 0)):
-            moves.append((i, j))
-        return moves
+    def initialize_actions(self) -> list:
+        return [(i,j) for i in range(3) for j in range(3)]
 
     def _update_status(self, action: tuple[int, int]) -> None:
         """Update the status variables after a move
@@ -110,10 +97,9 @@ class TicTacToe(GameState):
         Returns:
             np.ndarray: The new game board
         """
+        assert self._is_valid_move(action)
+
         i, j = action
-
-        assert self._is_valid_move(*action)
-
         board = self._board.copy()
         board[i, j] = self._turnID
 
