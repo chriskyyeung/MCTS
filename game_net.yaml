@@ -1,0 +1,13 @@
+nn:
+  init_method: "xaiver"
+  convolution:
+    out_channel: 16
+    kernel_size: 3 
+  residual:
+    n_block: 2
+    out_channel: 16
+    kernel_size: 3
+  policy_value:
+    p_channel: 2
+    v_channel: 1
+    v_middle: 16

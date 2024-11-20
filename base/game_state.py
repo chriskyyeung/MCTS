@@ -6,6 +6,8 @@ from typing import Self, Any
 
 class GameState:
     def __init__(self) -> None:
+        if not hasattr(self, "_board"):
+            self._board = None
         self.is_game_over = False
         self.all_actions = self.initialize_actions()
         self.set_legal_action_index()
