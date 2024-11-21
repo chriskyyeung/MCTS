@@ -1,13 +1,34 @@
-nn:
-  init_method: "xaiver"
-  convolution:
-    out_channel: 16
-    kernel_size: 3 
-  residual:
-    n_block: 2
-    out_channel: 16
-    kernel_size: 3
-  policy_value:
-    p_channel: 2
-    v_channel: 1
-    v_middle: 16
+hyperparameter:
+  seed: 0
+  lr: 0.5
+  batch_szie: 32
+  schedular:
+    plateau:
+      method: "min"
+      factor: 0.8
+      patience: 10
+  
+tictactoe:
+  game_net:
+    init_method: "xaiver"
+    convolution:
+      out_channel: 32
+      kernel_size: 3
+    residual:
+      n_block: 2
+      out_channel: 32
+      kernel_size: 3
+    policy_value:
+      p_channel: 2
+      v_channel: 1
+      v_middle: 72
+  n_interation: 10
+  n_process: 8
+  n_game: 25
+  n_simulation: 100
+  battle_version: 0
+  model_in_version: 0
+  model_out_version: 1
+  battle_path: "data/{game}/battle_v{version}.pt"
+  model_in_path: "data/{game}/model_v{version}.pt"
+  model_out_path: "data/{game}/model_v{version}.pt"

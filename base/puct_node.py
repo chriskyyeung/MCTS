@@ -29,14 +29,17 @@ class PUCTNode:
         return self.state.is_game_over
 
     @property
-    def n_visit(self) -> int:
+    def N(self) -> int:
         # Retrieve the value from self.parent
         return self.parent.N_a[self.parent_action] if self.parent else 0
 
-    @n_visit.setter
-    def n_visit(self, value):
+    @N.setter
+    def N(self, value):
         # Parent stores the visit of each child
+        # print(self.parent_action, value)
+        # self.state.print()
         self.parent.N_a[self.parent_action] = value
+        # print(self.parent.N_a)
         pass
 
     @property
@@ -56,7 +59,7 @@ class PUCTNode:
     
     @property
     def U_a(self):
-        return self.c_puct * sqrt(self.n_visit) * self.p_a  / (1 + self.N_a)
+        return self.c_puct * sqrt(self.N) * self.p_a  / (1 + self.N_a)
     
     def no_legal_move(self):
         # Default: Game ends when no legal moves. Thus do nothing
@@ -96,7 +99,7 @@ class PUCTNode:
             if move_id not in current.child:
                 current.child[move_id] = PUCTNode(
                     current.state.update(current.state.all_actions[move_id]),
-                    self,
+                    current,
                     move_id,
                 )
             
@@ -112,7 +115,7 @@ class PUCTNode:
             score (int): Score of the current state
         """
         if self.parent:
-            self.n_visit += 1
+            self.N += 1
             self.V += score
             self.parent.backpropagate(score*-1)
         return
@@ -120,13 +123,24 @@ class PUCTNode:
 class PUCTRoot:
     """The root of the tree of PUCT roots and perform the search
     """
-    def __init__(self, use_cuda: bool = True) -> None:
-        self.use_cuda = torch.cuda.is_available() if use_cuda else False
-        self.parent = None
-        self.child = None # Only one child which is the current state
+    def __init__(self, device: str = "cpu") -> None:
+        self.device = device
+        self.parent = None # Must be None
+        self.child: GameState = None # Only one child which is the current state
         self.N_a = [0]
         self.V_a = [0]
         pass
+
+    def set_child(self, new_child: PUCTNode):
+        # Point to the new child
+        self.child = new_child
+        self.N_a[0] = new_child.N
+        self.V_a[0] = new_child.V
+
+        # Change the parent of the child
+        new_child.parent = self
+        new_child.parent_action = 0
+        return
 
     def backpropagate(self, *args) -> None:
         # To terminate the backpropagate
@@ -143,13 +157,11 @@ class PUCTRoot:
         """
         # Default is to treat it as 1 batch, 1 channel 
         board = torch.from_numpy(board_non_torch)
-        board = board.view(1, 1, *board.shape).float()
-        if self.use_cuda:
-            board = board.cuda()
+        board = board.view(1, 1, *board.shape).to(self.device).float()
         return board
 
-    def search(self, state: GameState, n_search: int, net: torch.nn.Module):
-        self.child = PUCTNode(state, parent=self, parent_action=0)
+    def search(self, current: PUCTNode, n_search: int, game_net: torch.nn.Module):
+        self.set_child(current)
 
         with torch.no_grad():
             for _ in range(n_search):
@@ -158,7 +170,7 @@ class PUCTRoot:
 
                 # Use the net to get p, v pair
                 board = self.transform_board_for_torch(leaf.state._board)
-                p_a, v_a = net(board)
+                p_a, v_a = game_net(board)
                 p_a = torch.nn.Softmax(dim=1)(p_a).flatten().detach().cpu().numpy()
                 v_a = v_a.item()
             
@@ -171,38 +183,34 @@ class PUCTRoot:
         
         # Only consider number of visit for result
         max_visit = np.where(self.child.N_a == np.max(self.child.N_a))[0]
-        return np.random.choice(max_visit), self.child
+        move_id = np.random.choice(max_visit)
+        if move_id not in self.child.child:
+            self.child.child[move_id] = PUCTNode(
+                self.child.state.update(self.child.state.all_actions[move_id]),
+                self.child,
+                move_id,
+            )
+        
+        # Return result
+        return self.child.child[move_id]
 
     
 if __name__ == "__main__":
-    import yaml
+    from base.config import Config
     from game_net import GameNet    
     from tictactoe.tictactoe import TicTacToe
-    
-    with open("game_net.yaml", "r") as f:
-        config = yaml.safe_load(f)["nn"]
-    
-    config["convolution"]["in_channel"] = 1
-    config["residual"]["in_channel"] = config["convolution"]["out_channel"]
-    config["policy_value"]["in_channel"] = config["residual"]["in_channel"]
-    config["policy_value"]["height"] = 3
-    config["policy_value"]["width"] = 3
-    config["policy_value"]["p_output"] = 9
 
     root = PUCTRoot(False)
-    random_net = GameNet(
-        config["init_method"],
-        config["convolution"],
-        config["residual"],
-        config["policy_value"],
-    )#.cuda()
+    config = Config.load("game_net.yaml", "tictactoe")["game_net"]
+    random_net = GameNet(**config)
 
     current = TicTacToe()
     current.print()
     while not current.is_game_over:
-        a, child = root.search(current, 25, random_net)
+        a, current = root.search(current, 25, random_net)
         print(a)
-        current = current.update(current.all_actions[a])
+        # current = current.update(current.all_actions[a])
+        current = current.child[a]
         current.print()
 
     # empty_state = PUCTNode(TicTacToe(), None, None)

@@ -5,7 +5,6 @@ import logging
 
 import numpy as np
 from tqdm import tqdm
-import yaml
 
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
@@ -54,9 +53,9 @@ def eve_simulation(game_id: int, game_config: dict, first_hand: int, second_hand
     return first_hand, second_hand, result
         
 if __name__ == "__main__":
-    with open("config.yaml") as config:
-        config = yaml.safe_load(config)["EVE"]
+    from base.config import Config
 
+    config = Config.load("config.yaml", "EVE")
     game_id = config["game_id"]
     game_config = []
     config["log_config"]["filename"] = f"EvE_{game_name[game_id]}.log"

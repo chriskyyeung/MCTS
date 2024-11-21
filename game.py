@@ -1,11 +1,9 @@
 from functools import partial
-from itertools import chain
 import numpy as np
-import yaml
 
+from base.config import Config
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
-from base.non_determ_mcts_node import NonDetermMCTSNode
 from connect4.connect4 import Connect4
 from connect4.connect4_node import Connet4Node
 from knucklebones.knucklebones import Knucklebones
@@ -15,21 +13,17 @@ from tictactoe.tictactoe import TicTacToe
 from tictactoe.tictactoe_node import TicTacToeNode
 
 class Game:
-    def __init__(self) -> None:
+    def __init__(self, config_path: str="config.yaml") -> None:
+        self.config_path: str = config_path
         self.game: list[GameState] = [TicTacToe, Connect4, Knucklebones, partial(Knucklebones,False)]
         self.node: list[MCTSNode] = [TicTacToeNode, Connet4Node, KnucklebonesNode, KnucklebonesOpenLoopNode]
         self.game_name: list[str] = ["tictactoe", "connect4", "knucklebones", "knucklebones"]
         self.dice: list[int] = [-1, -1, 6, 6]
         pass
-
-    def load_config(self, section) -> None:
-        with open("config.yaml") as config:
-            self.config = yaml.safe_load(config)[section]
-        return
     
     def game_mode_selection(self):
         # Load config
-        self.load_config("main")
+        self.config = Config.load(self.config_path, "main")
 
         # Ask for the game mode to be run
         self.game_id = eval(input("Select game ([1] Tic-tac-toe / [2] Connect-4 / [3] Knucklebones / [4] Knucklebones - open loop): ")) - 1

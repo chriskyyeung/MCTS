@@ -1,13 +1,9 @@
 from functools import partial
-import random
-import os
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 initialization_dict = {
     "he": nn.init.kaiming_normal_,
@@ -15,17 +11,6 @@ initialization_dict = {
     "xaiver": nn.init.xavier_normal_,
     "xaiver_uniform": nn.init.xavier_uniform_,
 }
-
-
-def seed_everything(seed: int):
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    return
 
 def init_weight(method: str, m):
     if type(m) == nn.Conv2d or type(m) == nn.Linear:
@@ -120,6 +105,8 @@ class GameNet(nn.Module):
         conv_config: dict,
         residual_config: dict,
         policy_value_config: dict,
+        device: str = "cpu",
+        **kwargs
     ) -> None:
         super().__init__()
         self.conv = Conv2dBlock(**conv_config)
@@ -132,7 +119,18 @@ class GameNet(nn.Module):
     
         # Weight initialization
         self.apply(partial(init_weight, init_method))
+
+        self.to(device)
     
+    def dump(self, full_path: str) -> None:
+        torch.save(self.state_dict(), full_path)
+        return
+    
+    def load(self, full_path: str) -> None:
+        self.load_state_dict(torch.load(full_path, weights_only=True))
+        self.eval()
+        return
+
     def forward(self, x):
         x = self.conv(x)
         x = self.residual(x)
@@ -142,10 +140,15 @@ class GameNet(nn.Module):
 class GameData(Dataset):
     def __init__(self, board, p, v) -> None:
         super().__init__()
-        self.X = board # N x (height x width) x extra_dimension if any
+        self.X = board.view(*board.shape, 1) # N x (height x width) x extra_dimension if any
         self.p_target = p # N x (height x width) x extra_dimension if any
         self.v_target = v # n_array
 
+    def to(self, device: str = "cpu") -> None:
+        self.X = self.X.to(device).float()
+        self.p_target = self.p_target.to(device).float()
+        self.v_target = self.v_target.to(device).float()
+        return
 
     def __len__(self):
         return len(self.v_target)
@@ -153,78 +156,23 @@ class GameData(Dataset):
     def __getitem__(self, i):
         return self.X[i], self.p_target[i], self.v_target[i]
 
-def train(
-    game_net: GameNet,
-    game_data,
-    n_epoch,
-    hyperparameter,
-    use_cuda=True,
-    seed=0,
-):
-    # Pre-training set-up
-    seed_everything(0)
-    use_cuda = torch.cuda.is_available() if use_cuda else False
-
-    # Network setup
-    game_net.train()
-    criterion = PolicyValueLoss()
-    optimizer = optim.adam(game_net.parameters(), lr=hyperparameter["lr"])
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        **hyperparameter["schedular"]["plateau"]
-    )
-
-    # Prepare data
-    train_set = GameData(game_data)
-    train_loader = DataLoader(train_set, batch_size=hyperparameter["batch_size"], shuffle=True, )
-
-    for epoch in range(n_epoch):
-        epoch_loss = 0.
-        n_batch = 0
-
-        for data in train_loader:
-            n_batch += 1
-            board, p_target, v_target = data
-            if use_cuda:
-                board = board.cuda().float()
-                p_target = p_target.cuda().float()
-                v_target = v_target.cuda().float()
-
-            optimizer.zero_grad()
-            p, v = game_net(board)
-            loss = criterion(p_target, v_target, p, v)
-            loss.backward()
-            epoch_loss += loss
-            optimizer.step()
-
-        scheduler.step(epoch_loss / n_batch)
-    return
-
-
 if __name__ == "__main__":
-    import yaml
-    with open("game_net.yaml", "r") as f:
-        config = yaml.safe_load(f)["nn"]
-    
-    board = torch.randn((16,3,3,1))
-    config["convolution"]["in_channel"] = board.shape[-1]
-    config["residual"]["in_channel"] = config["convolution"]["out_channel"]
-    config["policy_value"]["in_channel"] = config["residual"]["in_channel"]
-    config["policy_value"]["height"] = board.shape[1]
-    config["policy_value"]["width"] = board.shape[2]
-    config["policy_value"]["p_output"] = board.shape[1] * board.shape[2]
+    from base.config import Config
+    from time import time
 
+    use_cuda = True
+    device = "cuda" if use_cuda else "cpu"
+    board = torch.randn((256,3,3,1)).to(device)
+    config = Config.load("game_net.yaml", "tictactoe")["game_net"]
+
+    t0 = time()
     with torch.no_grad():
-        test_net = GameNet(
-            config["init_method"],
-            config["convolution"],
-            config["residual"],
-            config["policy_value"],
-        )
+        test_net = GameNet(device=device, **config,)        
+        for _ in range(1000):
+            p, v = test_net(board.permute(0,3,1,2))
+            p = nn.Softmax(dim=1)(p).view(-1, 3, 3)
 
-        p, v = test_net(board.permute(0,3,1,2))
-        p = nn.Softmax(dim=1)(p).view(-1, 3, 3)
-
-        print(p[0,:,:], v[0])
-        print(p[12,:,:], v[12])
+    print(time() - t0)
+    print(p[0,:,:], v[0])
+    print(p[12,:,:], v[12])
     pass
