@@ -17,7 +17,7 @@ if __name__ == "__main__":
     t = TicTacToeTrainer("tictactoe", use_cuda=True)
     
     for i in range(config["n_iteration"]):
-        t.generate_battle_record(False)
+        t.generate_battle_record(config, False)
 
         player = t.get_model(config["model_in_path"], config["game_net"])
         battle_record = torch.load(config["battle_path"], weights_only=True)

@@ -43,6 +43,7 @@ class ResidualBlock(nn.Module):
         kernel_size,
         stride=1,
         padding=1,
+        **kwargs,
     ) -> None:
         super().__init__()
         self.conv1 = Conv2dBlock(in_channel, out_channel, kernel_size, stride=stride, padding=padding)
@@ -112,7 +113,7 @@ class GameNet(nn.Module):
         self.conv = Conv2dBlock(**conv_config)
         
         self.residual = nn.Sequential()
-        for _ in range(residual_config.pop("n_block")):
+        for _ in range(residual_config["n_block"]):
             self.residual.append(ResidualBlock(**residual_config))
         
         self.pv = PolicyValueHead(**policy_value_config)

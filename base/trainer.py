@@ -105,7 +105,7 @@ class Trainer:
         done.wait()
         return
 
-    def generate_battle_record(self, use_cuda: bool = False):
+    def generate_battle_record(self, config: dict = None, use_cuda: bool = False):
         # Temporaily set the device
         orig_device = self.device
         self.set_device(use_cuda)
@@ -116,13 +116,8 @@ class Trainer:
         done = Event()
 
         # Battle configuration
-        config = Config.load("game_net.yaml", self.game)
-        player = self.get_model(config["model_in_path"], config.pop("game_net")).share_memory()
-        # player = GameNet(device=self.device, **config.pop("game_net")).share_memory()
-        # if Path(config["model_in_path"]).exists():
-        #     player.load(config["model_in_path"])
-        # else:
-        #     player.dump(config["model_in_path"])
+        config = Config.load("game_net.yaml", self.game) if config is None else config
+        player = self.get_model(config["model_in_path"], config["game_net"]).share_memory()
 
         # Start all processes
         for _ in range(config["n_process"]):

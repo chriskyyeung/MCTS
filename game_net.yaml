@@ -1,34 +1,34 @@
 hyperparameter:
   seed: 0
-  lr: 0.5
-  batch_szie: 32
+  lr: 0.1
+  batch_size: 32
   schedular:
     plateau:
-      method: "min"
+      mode: "min"
       factor: 0.8
       patience: 10
   
 tictactoe:
   game_net:
     init_method: "xaiver"
-    convolution:
+    conv_config:
       out_channel: 32
       kernel_size: 3
-    residual:
+    residual_config:
       n_block: 2
       out_channel: 32
       kernel_size: 3
-    policy_value:
+    policy_value_config:
       p_channel: 2
       v_channel: 1
       v_middle: 72
-  n_interation: 10
+  n_iteration: 10
   n_process: 8
   n_game: 25
   n_simulation: 100
+  n_epoch: 20
   battle_version: 0
   model_in_version: 0
   model_out_version: 1
-  battle_path: "data/{game}/battle_v{version}.pt"
-  model_in_path: "data/{game}/model_v{version}.pt"
-  model_out_path: "data/{game}/model_v{version}.pt"
+  battle_format: "data/{game}/battle_v{version}.pt"
+  model_format: "data/{game}/model_v{version}.pt"

@@ -33,9 +33,9 @@ class Config:
 
     @classmethod
     def tictactoe(cls, config):
-        config["battle_path"] = config["battle_path"].format(game="tictactoe", version=config["battle_version"])
-        config["model_in_path"] = config["model_in_path"].format(game="tictactoe", version=config["model_in_version"])
-        config["model_out_path"] = config["model_out_path"].format(game="tictactoe", version=config["model_out_version"])
+        config["battle_path"] = config["battle_format"].format(game="tictactoe", version=config["battle_version"])
+        config["model_in_path"] = config["model_format"].format(game="tictactoe", version=config["model_in_version"])
+        config["model_out_path"] = config["model_format"].format(game="tictactoe", version=config["model_out_version"])
         config["game_net"] = cls.game_net(config["game_net"], (1,3,3,1))
         return config
 
