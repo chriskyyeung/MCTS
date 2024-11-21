@@ -10,11 +10,13 @@ Implementation of MCTS on
   - [x] Tic-tac-toe
   - [x] Connect-4
   - [x] KnuckleBones
-- [ ] MCTS implementation
+- [x] MCTS implementation
   - [x] Close loop MCTS
     - Deterministic game
     - Non-deterministic game (i.e. with chance node)
-  - [ ] Open loop MCTS (in progress)
+  - [x] Open loop MCTS [non_determ]
+- [ ] Alpha zero implementation
+  - Fixing game generation issue - identical episodes are generated
 - [ ] Analysis
   - [x] EvE pipeline (multiprocessing available)
   - [x] Simple notebook for plotting EvE results
