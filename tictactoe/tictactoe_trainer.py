@@ -2,7 +2,7 @@ import torch
 
 from base.game_net import GameData, GameNet
 from base.trainer import Trainer
-from tictactoe import TicTacToe
+from tictactoe.tictactoe_game import TicTacToe
 
 class TicTacToeTrainer(Trainer):
     def __init__(self, game_config: str, use_cuda) -> None:

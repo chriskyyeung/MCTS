@@ -4,12 +4,12 @@ import numpy as np
 from base.config import Config
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
-from connect4.connect4 import Connect4
+from connect4.connect4_game import Connect4
 from connect4.connect4_node import Connet4Node
-from knucklebones.knucklebones import Knucklebones
+from knucklebones.knucklebones_game import Knucklebones
 from knucklebones.knucklebones_node import KnucklebonesNode
 from knucklebones.knucklebones_openloop_node import KnucklebonesOpenLoopNode
-from tictactoe.tictactoe import TicTacToe
+from tictactoe.tictactoe_game import TicTacToe
 from tictactoe.tictactoe_node import TicTacToeNode
 
 class Game:
