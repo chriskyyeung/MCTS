@@ -141,7 +141,7 @@ class GameNet(nn.Module):
 class GameData(Dataset):
     def __init__(self, board, p, v) -> None:
         super().__init__()
-        self.X = board.view(*board.shape, 1) # N x (height x width) x extra_dimension if any
+        self.X = board # N x (height x width) x extra_dimension if any
         self.p_target = p # N x (height x width) x extra_dimension if any
         self.v_target = v # n_array
 
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     with torch.no_grad():
         test_net = GameNet(device=device, **config,)        
         for _ in range(1000):
-            p, v = test_net(board.permute(0,3,1,2))
+            p, v = test_net(board)
             p = nn.Softmax(dim=1)(p).view(-1, 3, 3)
 
     print(time() - t0)

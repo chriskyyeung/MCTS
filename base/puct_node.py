@@ -36,10 +36,7 @@ class PUCTNode:
     @N.setter
     def N(self, value):
         # Parent stores the visit of each child
-        # print(self.parent_action, value)
-        # self.state.print()
         self.parent.N_a[self.parent_action] = value
-        # print(self.parent.N_a)
         pass
 
     @property
@@ -146,7 +143,7 @@ class PUCTRoot:
         # To terminate the backpropagate
         return
 
-    def transform_board_for_torch(self, board_non_torch: Any):
+    def transform_board_to_torch(self, board_non_torch: Any, turn_id: int):
         """Game specific transformation for preparing input for its net
 
         Args:
@@ -155,13 +152,17 @@ class PUCTRoot:
         Returns:
             torch.: _description_
         """
-        # Default is to treat it as 1 batch, 1 channel 
-        board = torch.from_numpy(board_non_torch)
-        board = board.view(1, 1, *board.shape).to(self.device).float()
-        return board
+        # Default is to treat it as 1 batch, 3 channel 
+        board_non_torch = torch.from_numpy(board_non_torch)
+        board = torch.zeros(*board_non_torch.shape, 3)
+        board[:,:,:,0] = board_non_torch == turn_id
+        board[:,:,:,1] = board_non_torch == -turn_id
+        board[:,:,:,2] = turn_id
+        return board.permute(0,3,1,2).to(self.device).float()
 
-    def search(self, current: PUCTNode, n_search: int, game_net: torch.nn.Module):
+    def search(self, current: PUCTNode, n_search: int, game_net: torch.nn.Module, use_dirichlet: bool = False) -> PUCTNode:
         self.set_child(current)
+        board_size = current.state._board.shape
 
         with torch.no_grad():
             for _ in range(n_search):
@@ -169,7 +170,7 @@ class PUCTRoot:
                 leaf = self.child.select()
 
                 # Use the net to get p, v pair
-                board = self.transform_board_for_torch(leaf.state._board)
+                board = self.transform_board_to_torch(leaf.state._board.reshape(1,*board_size), leaf.state._turnID)
                 p_a, v_a = game_net(board)
                 p_a = torch.nn.Softmax(dim=1)(p_a).flatten().detach().cpu().numpy()
                 v_a = v_a.item()
@@ -182,8 +183,7 @@ class PUCTRoot:
                 leaf.backpropagate(v_a)
         
         # Only consider number of visit for result
-        max_visit = np.where(self.child.N_a == np.max(self.child.N_a))[0]
-        move_id = np.random.choice(max_visit)
+        move_id = self.choose_best_move(0.01, 0.03, 0.25)
         if move_id not in self.child.child:
             self.child.child[move_id] = PUCTNode(
                 self.child.state.update(self.child.state.all_actions[move_id]),
@@ -194,11 +194,23 @@ class PUCTRoot:
         # Return result
         return self.child.child[move_id]
 
+    def choose_best_move(self, tau: float = 1., dirichlet: float = 0.03, epsilon: float = 0.):
+        child_visit = self.child.N_a[self.child.state.legal_index]
+        child_visit = np.pow(child_visit, tau)
+
+        if epsilon > 0:
+            noise = np.random.dirichlet(np.repeat(dirichlet, len(child_visit)), len(child_visit))
+            child_visit = (1 - epsilon) * child_visit / np.sum(child_visit) + epsilon * noise
+
+        max_visit = np.where(child_visit == np.max(child_visit))[0]
+        move_id = np.random.choice(max_visit)
+        move_id = self.child.state.legal_index[move_id]
+        return move_id
     
 if __name__ == "__main__":
     from base.config import Config
     from game_net import GameNet    
-    from tictactoe.tictactoe import TicTacToe
+    from tictactoe.tictactoe_game import TicTacToe
 
     root = PUCTRoot(False)
     config = Config.load("game_net.yaml", "tictactoe")["game_net"]

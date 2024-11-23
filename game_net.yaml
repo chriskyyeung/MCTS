@@ -1,12 +1,12 @@
 hyperparameter:
   seed: 0
-  lr: 0.1
+  lr: 0.05
   batch_size: 32
   schedular:
     plateau:
       mode: "min"
       factor: 0.8
-      patience: 10
+      patience: 5
   
 tictactoe:
   game_net:
@@ -22,11 +22,11 @@ tictactoe:
       p_channel: 2
       v_channel: 1
       v_middle: 72
-  n_iteration: 10
+  n_iteration: 5
   n_process: 8
-  n_game: 25
-  n_simulation: 100
-  n_epoch: 20
+  n_game: 50
+  n_simulation: 25
+  n_epoch: 50
   battle_version: 0
   model_in_version: 0
   model_out_version: 1

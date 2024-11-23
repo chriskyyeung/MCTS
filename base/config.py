@@ -23,12 +23,12 @@ class Config:
 
     @classmethod
     def game_net(cls, config, size):
-        config["conv_config"]["in_channel"] = size[-1]
+        config["conv_config"]["in_channel"] = size[1]
         config["residual_config"]["in_channel"] = config["conv_config"]["out_channel"]
         config["policy_value_config"]["in_channel"] = config["residual_config"]["in_channel"]
-        config["policy_value_config"]["height"] = size[1]
-        config["policy_value_config"]["width"] = size[2]
-        config["policy_value_config"]["p_output"] = size[1] * size[2]
+        config["policy_value_config"]["height"] = size[2]
+        config["policy_value_config"]["width"] = size[3]
+        config["policy_value_config"]["p_output"] = size[2] * size[3]
         return config
 
     @classmethod
@@ -36,7 +36,7 @@ class Config:
         config["battle_path"] = config["battle_format"].format(game="tictactoe", version=config["battle_version"])
         config["model_in_path"] = config["model_format"].format(game="tictactoe", version=config["model_in_version"])
         config["model_out_path"] = config["model_format"].format(game="tictactoe", version=config["model_out_version"])
-        config["game_net"] = cls.game_net(config["game_net"], (1,3,3,1))
+        config["game_net"] = cls.game_net(config["game_net"], (1,3,3,3)) # batch x channel x height x width
         return config
 
 if __name__ == "__main__":
