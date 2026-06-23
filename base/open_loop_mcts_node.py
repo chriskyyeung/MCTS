@@ -95,7 +95,9 @@ class OpenLoopMCTSNode(MCTSNode):
         dice = self._random_state
         self.children[i].state = self.state.update((dice, move))
         self.children[i]._untried_actions = [
-            j for j in self.children[i].state.get_legal_actions() if self.children[i].children[j] is None
+            j
+            for j in self.children[i].state.get_legal_actions()
+            if self.children[i].children[self.children[i]._move_to_id[j]] is None
         ]
         self.children[i].parent_action = (dice, move)
 
@@ -112,14 +114,15 @@ class OpenLoopMCTSNode(MCTSNode):
         """
         # For open loop, actions only contains deterministic part
         action_id = self._get_action()
-        action = (self._random_state, self._move_to_id[action_id])
-        self.children[action_id] = self.__class__(
+        action = (self._random_state, action_id)
+        action_idx = self._move_to_id[action_id]
+        self.children[action_idx] = self.__class__(
             self.state.update(action),
             parent=self,
             parent_action=action,
             discrete_states=np.repeat(1 / 6, repeats=6),
         )
-        return self.children[action_id]
+        return self.children[action_idx]
 
     def selection(self, c: float) -> Self:
         """Selection step

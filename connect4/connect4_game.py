@@ -27,6 +27,20 @@ class Connect4(GameState):
         super().__init__()
         pass
 
+    def clone(self) -> "Connect4":
+        new_state = self.__class__.__new__(self.__class__)
+        new_state._board = self._board.copy()
+        new_state._turnID = self._turnID
+        new_state._next = self._next.copy()
+        new_state._row_status = self._row_status.copy()
+        new_state._col_status = self._col_status.copy()
+        new_state._leftDiag_status = self._leftDiag_status.copy()
+        new_state._rightDiag_status = self._rightDiag_status.copy()
+        new_state.is_game_over = self.is_game_over
+        new_state.all_actions = self.all_actions
+        new_state.legal_index = list(self.legal_index)
+        return new_state
+
     @property
     def status(self) -> tuple[int, ...]:
         """Return all status checks for looping or other operations

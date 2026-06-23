@@ -84,16 +84,24 @@ class GameState:
         """
         return [self.all_actions[i] for i in self.legal_index]
 
+    def clone(self) -> Self:
+        """To return a fast clone of the current GameState, avoiding deepcopy
+
+        Returns:
+            GameState: A clone of the current GameState
+        """
+        raise NotImplementedError("Please implement clone() for the specific GameState subclass")
+
     def update(self, action: Any) -> Self:
-        """Update the game state and return a deepcopy of the state
+        """Update the game state and return a clone of the state
 
         Args:
             action (int): Cooridnate of the desired move
 
         Returns:
-            Self: Updated version on the deepcopy of the input state
+            Self: Updated version on the clone of the input state
         """
-        temp = deepcopy(self)
+        temp = self.clone()
         temp._board = temp._move(action)
         temp.check_game_over()
         temp.set_legal_action_index()

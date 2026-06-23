@@ -48,16 +48,17 @@ class NonDetermMCTSNode(MCTSNode):
         pass
 
     @property
-    def child_weights(self) -> list:
-        weights = np.repeat(0, repeats=len(self.children[0]))
+    def child_weights(self) -> np.ndarray:
+        weights = np.zeros(len(self.children[0]), dtype=float)
         for irow in range(len(self.children[0])):
-            node_weight = 0
+            node_weight = 0.0
             node_N = 0
 
             for istate in range(len(self.children)):
-                if self.children[istate][irow] is not None:
-                    node_weight += self.children[istate][irow]._W
-                    node_N += self.children[istate][irow]._N
+                child_node = self.children[istate][irow]
+                if child_node is not None:
+                    node_weight += child_node._W
+                    node_N += child_node._N
 
             if node_N > 0:
                 weights[irow] = node_weight / node_N + self._c * np.sqrt(2 * np.log(self._N) / node_N)

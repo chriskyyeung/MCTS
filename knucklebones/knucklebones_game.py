@@ -27,6 +27,20 @@ class Knucklebones(GameState):
         super().__init__()
         pass
 
+    def clone(self) -> "Knucklebones":
+        new_state = self.__class__.__new__(self.__class__)
+        new_state._board = self._board.copy()
+        new_state._moveID = self._moveID
+        new_state._count = self._count.copy()
+        new_state.use_close_loop = self.use_close_loop
+        new_state._layer_status = self._layer_status.copy()
+        new_state._row_score = self._row_score.copy()
+        new_state._nxt_row = self._nxt_row.copy()
+        new_state.is_game_over = self.is_game_over
+        new_state.all_actions = self.all_actions
+        new_state.legal_index = list(self.legal_index)
+        return new_state
+
     def check_game_over(self) -> None:
         """Whether the game ends
 

@@ -19,6 +19,18 @@ class TicTacToe(GameState):
         super().__init__()
         pass
 
+    def clone(self) -> "TicTacToe":
+        new_state = self.__class__.__new__(self.__class__)
+        new_state._board = self._board.copy()
+        new_state._turnID = self._turnID
+        new_state._row_status = self._row_status.copy()
+        new_state._col_status = self._col_status.copy()
+        new_state._diag_status = self._diag_status.copy()
+        new_state.is_game_over = self.is_game_over
+        new_state.all_actions = self.all_actions
+        new_state.legal_index = list(self.legal_index)
+        return new_state
+
     def check_game_over(self) -> bool:
         """Whether the game ends
 

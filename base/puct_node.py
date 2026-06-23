@@ -200,7 +200,11 @@ class PUCTRoot:
                 leaf.backpropagate(v_a)
 
         # Only consider number of visit for result
-        move_id = self.choose_best_move(0.01, 0.03, 0.25)
+        if use_dirichlet:
+            move_id = self.choose_best_move(tau=1.0, dirichlet=0.03, epsilon=0.25, stochastic=True)
+        else:
+            move_id = self.choose_best_move(tau=0.0, dirichlet=0.0, epsilon=0.0, stochastic=False)
+
         if move_id not in self.child.child:
             self.child.child[move_id] = PUCTNode(
                 self.child.state.update(self.child.state.all_actions[move_id]),
@@ -211,24 +215,32 @@ class PUCTRoot:
         # Return result
         return self.child.child[move_id]
 
-    def choose_best_move(self, tau: float = 1.0, dirichlet: float = 0.03, epsilon: float = 0.0):
+    def choose_best_move(
+        self, tau: float = 1.0, dirichlet: float = 0.03, epsilon: float = 0.0, stochastic: bool = False
+    ):
         child_visit = self.child.N_a[self.child.state.legal_index]
-        child_visit = np.pow(child_visit, tau)
 
-        if epsilon > 0:
-            noise = np.random.dirichlet(np.repeat(dirichlet, len(child_visit)))
-            child_visit = (1 - epsilon) * child_visit / np.sum(child_visit) + epsilon * noise
+        if stochastic:
+            if tau > 0:
+                child_visit = np.pow(child_visit, 1.0 / tau)
+            probs = child_visit / np.sum(child_visit)
+            if epsilon > 0:
+                noise = np.random.dirichlet(np.repeat(dirichlet, len(child_visit)))
+                probs = (1 - epsilon) * probs + epsilon * noise
+            # Re-normalize to ensure probabilities sum exactly to 1.0
+            probs = probs / np.sum(probs)
+            move_idx = np.random.choice(len(probs), p=probs)
+            move_id = self.child.state.legal_index[move_idx]
+        else:
+            max_visit = np.where(child_visit == np.max(child_visit))[0]
+            move_id = self.child.state.legal_index[np.random.choice(max_visit)]
 
-        max_visit = np.where(child_visit == np.max(child_visit))[0]
-        move_id = np.random.choice(max_visit)
-        move_id = self.child.state.legal_index[move_id]
         return move_id
 
 
 if __name__ == "__main__":
-    from game_net import GameNet
-
     from base.config import Config
+    from base.game_net import GameNet
     from tictactoe.tictactoe_game import TicTacToe
 
     root = PUCTRoot(False)
