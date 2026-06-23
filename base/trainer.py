@@ -97,13 +97,13 @@ class Trainer:
 
         # Get MCT and netwotk ready
         player.eval()
-        root = PUCTRoot(self.device)
 
         for _ in tqdm(range(battle_config["n_game"])):
             # Initialize game record
             board, p, v = [], [], []
 
-            # Initialize the game
+            # Initialize the game with a fresh MCTS tree per game
+            root = PUCTRoot(self.device)
             current = PUCTNode(self.game_constructor(), None, 0)
 
             while not current.state.is_game_over:

@@ -177,17 +177,26 @@ class PUCTRoot:
                 # Selection until reaching a leaf
                 leaf = self.child.select()
 
-                # Use the net to get p, v pair
-                board = self.transform_board_to_torch(leaf.state._board.reshape(1, *board_size), leaf.state._turnID)
-                p_a, v_a = game_net(board)
-                p_a = torch.nn.Softmax(dim=1)(p_a).flatten().detach().cpu().numpy()
-                v_a = v_a.item()
+                if leaf.is_terminal:
+                    # Terminal node: use ground-truth game result
+                    # Multiply by _turnID to convert from absolute to
+                    # current-player perspective (matching network convention)
+                    v_a = leaf.state.game_result * leaf.state._turnID
+                else:
+                    # Use the net to get p, v pair
+                    board = self.transform_board_to_torch(
+                        leaf.state._board.reshape(1, *board_size),
+                        leaf.state._turnID,
+                    )
+                    p_a, v_a = game_net(board)
+                    p_a = torch.nn.Softmax(dim=1)(p_a).flatten().detach().cpu().numpy()
+                    v_a = v_a.item()
 
-                # Expansion if needed
-                if not (leaf.is_terminal or leaf.is_expanded):
-                    leaf.expand(p_a)
+                    # Expansion if needed
+                    if not leaf.is_expanded:
+                        leaf.expand(p_a)
 
-                # Backpropagation
+                # Backpropagation (ground truth for terminal, network estimate otherwise)
                 leaf.backpropagate(v_a)
 
         # Only consider number of visit for result
@@ -207,7 +216,7 @@ class PUCTRoot:
         child_visit = np.pow(child_visit, tau)
 
         if epsilon > 0:
-            noise = np.random.dirichlet(np.repeat(dirichlet, len(child_visit)), len(child_visit))
+            noise = np.random.dirichlet(np.repeat(dirichlet, len(child_visit)))
             child_visit = (1 - epsilon) * child_visit / np.sum(child_visit) + epsilon * noise
 
         max_visit = np.where(child_visit == np.max(child_visit))[0]
