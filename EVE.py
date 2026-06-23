@@ -17,6 +17,8 @@ from knucklebones.knucklebones_openloop_node import KnucklebonesOpenLoopNode
 from tictactoe.tictactoe_game import TicTacToe
 from tictactoe.tictactoe_node import TicTacToeNode
 
+logger = logging.getLogger(__name__)
+
 game: list[GameState] = [
     TicTacToe,
     Connect4,
