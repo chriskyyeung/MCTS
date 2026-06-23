@@ -1,4 +1,5 @@
 from functools import partial
+
 import numpy as np
 
 from base.config import Config
@@ -12,27 +13,50 @@ from knucklebones.knucklebones_openloop_node import KnucklebonesOpenLoopNode
 from tictactoe.tictactoe_game import TicTacToe
 from tictactoe.tictactoe_node import TicTacToeNode
 
+
 class Game:
-    def __init__(self, config_path: str="config.yaml") -> None:
+    def __init__(self, config_path: str = "config.yaml") -> None:
         self.config_path: str = config_path
-        self.game: list[GameState] = [TicTacToe, Connect4, Knucklebones, partial(Knucklebones,False)]
-        self.node: list[MCTSNode] = [TicTacToeNode, Connet4Node, KnucklebonesNode, KnucklebonesOpenLoopNode]
-        self.game_name: list[str] = ["tictactoe", "connect4", "knucklebones", "knucklebones"]
+        self.game: list[GameState] = [
+            TicTacToe,
+            Connect4,
+            Knucklebones,
+            partial(Knucklebones, False),
+        ]
+        self.node: list[MCTSNode] = [
+            TicTacToeNode,
+            Connet4Node,
+            KnucklebonesNode,
+            KnucklebonesOpenLoopNode,
+        ]
+        self.game_name: list[str] = [
+            "tictactoe",
+            "connect4",
+            "knucklebones",
+            "knucklebones",
+        ]
         self.dice: list[int] = [-1, -1, 6, 6]
         pass
-    
+
     def game_mode_selection(self):
         # Load config
         self.config = Config.load(self.config_path, "main")
 
         # Ask for the game mode to be run
-        self.game_id = eval(input("Select game ([1] Tic-tac-toe / [2] Connect-4 / [3] Knucklebones / [4] Knucklebones - open loop): ")) - 1
+        self.game_id = (
+            eval(
+                input(
+                    "Select game ([1] Tic-tac-toe / [2] Connect-4 / [3] Knucklebones / [4] Knucklebones - open loop): "
+                )
+            )
+            - 1
+        )
         self.game_mode = eval(input("Select mode ([1] PVE / [2] EVP / [3] EVE): "))
 
         self.initialize_board()
         self.board.print()
         return
-    
+
     def initialize_board(self):
         # Intialize the board
         self.board: GameState = self.game[self.game_id]()
@@ -41,12 +65,22 @@ class Game:
     def start(self):
         # Players configuration. None = human player
         players = [None, None]
-        
+        action = None
+
         if self.game_mode == 3:
-            players[0] = [self.config["game_config"][self.game_name[self.game_id]], None]
-            players[1] = [self.config["game_config"][self.game_name[self.game_id]], None]
+            players[0] = [
+                self.config["game_config"][self.game_name[self.game_id]],
+                None,
+            ]
+            players[1] = [
+                self.config["game_config"][self.game_name[self.game_id]],
+                None,
+            ]
         else:
-            players[2-self.game_mode] = [self.config["game_config"][self.game_name[self.game_id]], None]
+            players[2 - self.game_mode] = [
+                self.config["game_config"][self.game_name[self.game_id]],
+                None,
+            ]
 
         istep = 0
         while not self.board.is_game_over:
@@ -62,7 +96,12 @@ class Game:
 
             istep += 1
 
-    def run_turn(self, ai_config:dict = None, computer_node: MCTSNode = None, is_print: bool = True) -> tuple:
+    def run_turn(
+        self,
+        ai_config: dict = None,
+        computer_node: MCTSNode = None,
+        is_print: bool = True,
+    ) -> tuple:
         n = self.dice[self.game_id]
         if n >= 0:
             n = self.roll_a_dice(n)
@@ -71,7 +110,7 @@ class Game:
 
         if ai_config:
             best_child = self.computer_move(
-                dice = n,
+                dice=n,
                 ai_config=ai_config,
                 computer_node=computer_node,
             )
@@ -88,7 +127,6 @@ class Game:
             self.board.print()
         return best_child, action
 
-
     def computer_move(
         self,
         ai_config: dict,
@@ -98,7 +136,7 @@ class Game:
         # Intialise the MCTS node
         if dice >= 0:
             discrete_states = np.zeros(6)
-            discrete_states[dice-1] = 1.
+            discrete_states[dice - 1] = 1.0
             if computer_node:
                 computer_node._set_random_state(discrete_states)
                 computer_node.update_node_N()
@@ -106,21 +144,19 @@ class Game:
                 computer_node = self.node[self.game_id](
                     self.board,
                     discrete_states=discrete_states,
-                    log_config=self.config["log_config"]
+                    log_config=self.config["log_config"],
                 )
         else:
             if not computer_node:
-                computer_node = self.node[self.game_id](
-                    self.board,
-                    log_config=self.config["log_config"]
-                ) 
+                computer_node = self.node[self.game_id](self.board, log_config=self.config["log_config"])
 
         # Return the best child
         return computer_node.best_action(**ai_config)
-    
+
     @staticmethod
     def roll_a_dice(n=6):
         return np.random.randint(n) + 1
+
 
 if __name__ == "__main__":
     game = Game()

@@ -2,12 +2,12 @@ import numpy as np
 
 from base.game_state import GameState
 
+
 class TicTacToe(GameState):
     def __init__(self) -> None:
-        """To construct the game state in the beginning
-        """
+        """To construct the game state in the beginning"""
         # Basic board setting
-        self._board = np.zeros((3,3))
+        self._board = np.zeros((3, 3))
         self._turnID = 1
 
         # Game status check
@@ -27,9 +27,9 @@ class TicTacToe(GameState):
         """
         # Check 1) draw, 2) row, 3) column, 4) diagonal
         self.is_game_over = (
-            np.all(self._board != 0) \
-            or np.any(np.abs(self._row_status) == 3) \
-            or np.any(np.abs(self._col_status) == 3) \
+            np.all(self._board != 0)
+            or np.any(np.abs(self._row_status) == 3)
+            or np.any(np.abs(self._col_status) == 3)
             or np.any(np.abs(self._diag_status) == 3)
         )
         return
@@ -40,7 +40,7 @@ class TicTacToe(GameState):
 
         Returns:
             Int : Score of the current game.
-                  - 1 means first-player wins, 
+                  - 1 means first-player wins,
                   - -1 means second-player wins
                   - and 0 means draw
         """
@@ -61,10 +61,10 @@ class TicTacToe(GameState):
             bool: Whether the move is valid
         """
         i, j = action
-        return self._board[i,j] == 0
+        return self._board[i, j] == 0
 
     def initialize_actions(self) -> list:
-        return [(i,j) for i in range(3) for j in range(3)]
+        return [(i, j) for i in range(3) for j in range(3)]
 
     def _update_status(self, action: tuple[int, int]) -> None:
         """Update the status variables after a move
@@ -79,7 +79,7 @@ class TicTacToe(GameState):
         # left diagonal
         if i == j:
             self._diag_status[0] += self._turnID
-        
+
         # right diagonal
         if i + j == 2:
             self._diag_status[1] += self._turnID
@@ -87,7 +87,7 @@ class TicTacToe(GameState):
         # It's opposite turn now
         self._turnID *= -1
         return
-    
+
     def _move(self, action: tuple[int, int]) -> np.ndarray:
         """Make the input move on the board and update the game status
 
@@ -105,10 +105,9 @@ class TicTacToe(GameState):
 
         self._update_status(action)
         return board
-    
+
     def print(self) -> None:
-        """To print the game board
-        """
+        """To print the game board"""
         print(self._board)
         print()
         return

@@ -1,16 +1,18 @@
 import numpy as np
 import torch
 
-from base.game_net import GameData, GameNet
+from base.game_net import GameData
 from base.trainer import Trainer
 from tictactoe.tictactoe_game import TicTacToe
+
 
 class TicTacToeTrainer(Trainer):
     ROT_IDX = [2, 5, 8, 1, 4, 7, 0, 3, 6]
     FLR_IDX = [2, 1, 0, 5, 4, 3, 8, 7, 6]
+
     def __init__(self, game_config: str, use_cuda) -> None:
-        super().__init__("tictactoe", TicTacToe, game_config, (1,3,3,3), use_cuda)
-    
+        super().__init__("tictactoe", TicTacToe, game_config, (1, 3, 3, 3), use_cuda)
+
     def generate_symmetry(self, board: np.ndarray, p: np.ndarray) -> np.ndarray:
         board_sym = [board]
         p_sym = [p]
@@ -30,12 +32,13 @@ class TicTacToeTrainer(Trainer):
         for i in range(len(board_sym)):
             board_sym.append(np.fliplr(board_sym[i]))
             p_sym.append(p_sym[i][self.FLR_IDX])
-        
+
         return np.stack(board_sym), np.stack(p_sym)
 
+
 if __name__ == "__main__":
-    import sys
     from base.config import Config
+
     torch.serialization.add_safe_globals([GameData])
 
     game = "tictactoe"
@@ -75,5 +78,3 @@ if __name__ == "__main__":
         print(config["model_in_path"])
         players.append(t.get_model(config["model_in_path"], config["game_net"]))
         t.vs_battle(players, 25)
-
-    

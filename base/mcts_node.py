@@ -1,32 +1,33 @@
 import logging
 from time import time
-from typing import Self, Any
+from typing import Any, Self
 
 from base.game_state import GameState
 
+
 class MCTSNode:
-    """Base class for a MCTS node
-    """
+    """Base class for a MCTS node"""
+
     def __init__(
-            self, 
-            state: GameState, 
-            parent: Self = None,
-            parent_action: Any = None,
-            log_config: dict = dict(),
-        ) -> None:
+        self,
+        state: GameState,
+        parent: Self = None,
+        parent_action: Any = None,
+        log_config: dict = dict(),
+    ) -> None:
         """Construct a node to perform MCTS on the input game state
 
         Args:
-            state (GameState): 
+            state (GameState):
                 Current game state
-            parent (Self, optional): 
-                Parent node of the current state. 
+            parent (Self, optional):
+                Parent node of the current state.
                 Defaults to None.
             parent_action (Any, optional):
-                Action taken by the parent node to reach here. 
+                Action taken by the parent node to reach here.
                 Defaults to None.
-            log_config (dict, optional): 
-                Configuration for `logging` library. 
+            log_config (dict, optional):
+                Configuration for `logging` library.
                 Defaults to dict().
         """
         self.state = state
@@ -49,12 +50,12 @@ class MCTSNode:
     def is_terminal(self) -> bool:
         # Check if the simulation ends
         return self.state.is_game_over
-    
+
     @property
     def is_fully_expanded(self) -> bool:
         # Check if the expansion is done
         return len(self._untried_actions) == 0
-    
+
     def _get_action(self) -> Any:
         # Get a action for updating the game state
         raise NotImplementedError
@@ -64,7 +65,7 @@ class MCTSNode:
 
     def best_child(self) -> Self:
         raise NotImplementedError
-    
+
     def get_untried_actions(self) -> list:
         """Retrieve all un-tried actions for expansion
 
@@ -72,7 +73,7 @@ class MCTSNode:
             list: List of untried legal actions
         """
         return self.state.get_legal_actions()
-    
+
     def expand(self) -> Self:
         """Append an expanded node as children and return it
 
@@ -80,13 +81,7 @@ class MCTSNode:
             Self: The expanded child node
         """
         action = self._get_action()
-        self.children.append(
-            self.__class__(
-                self.state.update(action),
-                parent=self,
-                parent_action=action
-            )
-        )
+        self.children.append(self.__class__(self.state.update(action), parent=self, parent_action=action))
         return self.children[-1]
 
     def selection(self, c: float) -> Self:
@@ -102,7 +97,7 @@ class MCTSNode:
         """Defining the whole simulation process"""
         raise NotImplementedError("Define the whole simulation process")
 
-    def backpropagate(self, score: Any) -> None:    
+    def backpropagate(self, score: Any) -> None:
         """Backpropagation, triggering parent's one if any
 
         Args:
@@ -111,10 +106,10 @@ class MCTSNode:
         self._N += 1
         self._W += score
         if self.parent:
-            self.parent.backpropagate(score*-1)
-        return 
+            self.parent.backpropagate(score * -1)
+        return
 
-    def best_action(self, c:float=0.1, simulation_time:float=1, n_simulation:float=100) -> Self:
+    def best_action(self, c: float = 0.1, simulation_time: float = 1, n_simulation: float = 100) -> Self:
         """Return the best child as the suggested action
 
         Args:

@@ -1,25 +1,27 @@
 from itertools import product
+
 import numpy as np
 
 from base.game_state import GameState
 
-class Knucklebones(GameState):
-    """Class for the state of a Connect-4 game
-    """
-    _dice = np.array(range(7), dtype=int)
-    _token = ["_"] + [i for i in range(1,7)]
 
-    def __init__(self, use_close_loop:bool = True) -> None:
+class Knucklebones(GameState):
+    """Class for the state of a Connect-4 game"""
+
+    _dice = np.array(range(7), dtype=int)
+    _token = ["_"] + [i for i in range(1, 7)]
+
+    def __init__(self, use_close_loop: bool = True) -> None:
         # Basic board setting
-        self._board = np.zeros((2,3,3), dtype=int)
+        self._board = np.zeros((2, 3, 3), dtype=int)
         self._moveID = 0
         self._count = np.zeros(7, dtype=int)
         self.use_close_loop = use_close_loop
 
         # Status check must be placed before calling parent class
-        self._layer_status = np.zeros(2, dtype=int) # check if the board is full
-        self._row_score = np.zeros((2,3), dtype=int) # Row scores
-        self._nxt_row = np.zeros((2,3), dtype=int) # Next position of each row
+        self._layer_status = np.zeros(2, dtype=int)  # check if the board is full
+        self._row_score = np.zeros((2, 3), dtype=int)  # Row scores
+        self._nxt_row = np.zeros((2, 3), dtype=int)  # Next position of each row
 
         # Call parent class to initialize actions
         super().__init__()
@@ -41,7 +43,7 @@ class Knucklebones(GameState):
         Returns:
             float : The normalised score difference of 2 players
             int : Score of the current game
-                  - 1 means first-player wins, 
+                  - 1 means first-player wins,
                   - -1 means second-player wins
                   - and 0 means draw
         """
@@ -109,10 +111,10 @@ class Knucklebones(GameState):
             if n != this_move:
                 new_row[idx] = n
                 idx += 1
-        
+
         # Update the opponent board and its status
         self._board[layer, irow, :] = new_row
-        self._tidy_up_row(layer, irow, idx-3)
+        self._tidy_up_row(layer, irow, idx - 3)
 
         # Now, it's opponent's turn
         self._moveID = layer
@@ -134,7 +136,6 @@ class Knucklebones(GameState):
         self._update_status(action)
         return self._board
 
-
     def get_legal_actions(self) -> list:
         """To return legal actions of the current game state
 
@@ -149,7 +150,7 @@ class Knucklebones(GameState):
             return list(product(Knucklebones._dice[1:], valid_move))
         else:
             return valid_move
-    
+
     def initialize_actions(self) -> list:
         """To return all actions, regardless of its validity
 
@@ -173,28 +174,27 @@ class Knucklebones(GameState):
 
         Args:
             row (np.ndarray): Row to be printed, which should be a single row
-        
+
         Returns:
             str: Formatted string recording the row status
         """
-        grid = [ "|{t}".format(t=Knucklebones._token[i]) for i in row]
+        grid = ["|{t}".format(t=Knucklebones._token[i]) for i in row]
         grid = "".join(grid) + "|"
         return grid
 
     def print(self) -> None:
-        """Print the game board
-        """
+        """Print the game board"""
         for irow in range(self._board.shape[1]):
             row = (
                 self._get_row_output(self._board[0, irow, ::-1])
-                + " {:02d}|{:02d} ".format(*self._row_score[:,irow])
+                + " {:02d}|{:02d} ".format(*self._row_score[:, irow])
                 + self._get_row_output(self._board[1, irow, :])
             )
             print(row)
         score = " {:02d}|{:02d} ".format(*np.sum(self._row_score, axis=1))
-        print("{space}{score}".format(space=" "*7, score=score))
+        print("{space}{score}".format(space=" " * 7, score=score))
         print()
-    
+
     @staticmethod
     def prompt_next_move() -> None:
         """Get the move from the human player
@@ -207,7 +207,7 @@ class Knucklebones(GameState):
 
 if __name__ == "__main__":
     kb = Knucklebones()
-    moves = [(2,2),(0,2),(2,3),(1,6),(2,3),(1,6),(0,1),(2,3)]
+    moves = [(2, 2), (0, 2), (2, 3), (1, 6), (2, 3), (1, 6), (0, 1), (2, 3)]
 
     for m in moves:
         kb = kb.update(m)

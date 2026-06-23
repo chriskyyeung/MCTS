@@ -1,45 +1,46 @@
-from typing import Self, Any
+from typing import Any, Self
 
 import numpy as np
 
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
 
+
 class NonDetermMCTSNode(MCTSNode):
-    """Base class for a MCTS node for non-deterministic game
-    """
+    """Base class for a MCTS node for non-deterministic game"""
+
     def __init__(
-            self, 
-            state: GameState, 
-            parent: Self = None,
-            parent_action: Any = None,
-            discrete_states: np.ndarray = np.array([1.]),
-            log_config: dict = dict(),
-        ) -> None:
+        self,
+        state: GameState,
+        parent: Self = None,
+        parent_action: Any = None,
+        discrete_states: np.ndarray = np.array([1.0]),
+        log_config: dict = dict(),
+    ) -> None:
         """Construct a node to perform MCTS on the input game state
 
         Args:
-            state (GameState): 
+            state (GameState):
                 Current game state
-            parent (Self, optional): 
-                Parent node of the current state. 
+            parent (Self, optional):
+                Parent node of the current state.
                 Defaults to None.
             parent_action (Any, optional):
-                Action taken by the parent node to reach here. 
+                Action taken by the parent node to reach here.
                 Defaults to None.
             discrete_states (np.ndarray, optional):
                 Probability for each discrete sta
-                tes. 
+                tes.
                 Defaults to np.array([1.]).
-            log_config (dict, optional): 
-                Configuration for `logging` library. 
+            log_config (dict, optional):
+                Configuration for `logging` library.
                 Defaults to dict().
         """
         super().__init__(state, parent, parent_action, log_config)
 
         # Handling random state
         self._set_random_state(discrete_states)
-        
+
         # Currently designed for numeric "action" values
         self._id_to_move = list(set(s[1] for s in self._untried_actions))
         self._move_to_id = {move: i for i, move in enumerate(self._id_to_move)}
@@ -57,10 +58,10 @@ class NonDetermMCTSNode(MCTSNode):
                 if self.children[istate][irow] is not None:
                     node_weight += self.children[istate][irow]._W
                     node_N += self.children[istate][irow]._N
-        
+
             if node_N > 0:
-                weights[irow] = node_weight / node_N + self._c * np.sqrt(2 * np.log(self._N)/ node_N)
-    
+                weights[irow] = node_weight / node_N + self._c * np.sqrt(2 * np.log(self._N) / node_N)
+
         return weights
 
     @property
@@ -69,7 +70,7 @@ class NonDetermMCTSNode(MCTSNode):
         raise NotImplementedError("")
 
     def get_child_by_action(self, action) -> Self:
-        for child in self.children[action[0]-1]:
+        for child in self.children[action[0] - 1]:
             if child and child.parent_action == action:
                 return child
         return None
@@ -77,8 +78,8 @@ class NonDetermMCTSNode(MCTSNode):
     def _set_random_state(self, discrete_states) -> None:
         # Handling random state
         self._random_state_config = {
-            'a': range(len(discrete_states)),
-            'p': discrete_states,
+            "a": range(len(discrete_states)),
+            "p": discrete_states,
         }
         return
 
@@ -86,7 +87,7 @@ class NonDetermMCTSNode(MCTSNode):
         weights = -np.inf
         for inode, node in enumerate(self.children[dice]):
             if node is not None and node._N > 0:
-                w = node._W / node._N + self._c * np.sqrt(2 * np.log(self._N)/ node._N)
+                w = node._W / node._N + self._c * np.sqrt(2 * np.log(self._N) / node._N)
                 if w > weights:
                     weights = w
                     max_node = [inode]
@@ -96,11 +97,11 @@ class NonDetermMCTSNode(MCTSNode):
 
     def _get_action(self) -> list:
         return self._untried_actions.pop()
-    
+
     def best_child(self) -> Self:
         dice = self._random_state
-        irow = self._get_child_weights_with_state(dice-1)
-        return self.children[dice-1][irow]
+        irow = self._get_child_weights_with_state(dice - 1)
+        return self.children[dice - 1][irow]
 
     def update_node_N(self) -> None:
         self._N = 0
@@ -120,13 +121,13 @@ class NonDetermMCTSNode(MCTSNode):
         """
         action = self._get_action()
         action_id = self._move_to_id[action[1]]
-        self.children[action[0]-1][action_id] =self.__class__(
-                self.state.update(action),
-                parent=self,
-                parent_action=action,
-                discrete_states=np.repeat(1/6, repeats=6),
+        self.children[action[0] - 1][action_id] = self.__class__(
+            self.state.update(action),
+            parent=self,
+            parent_action=action,
+            discrete_states=np.repeat(1 / 6, repeats=6),
         )
-        return self.children[action[0]-1][action_id]
+        return self.children[action[0] - 1][action_id]
 
     def selection(self, c: float) -> Self:
         """Selection step
@@ -172,5 +173,5 @@ class NonDetermMCTSNode(MCTSNode):
         while not current_state.is_game_over:
             action = self.simulation_step(current_state, self._random_state)
             current_state = current_state.update(action)
-        
+
         return current_state, current_state.game_result

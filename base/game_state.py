@@ -1,8 +1,8 @@
-"""This is the base class for recording game state
-"""
+"""This is the base class for recording game state"""
 
 from copy import deepcopy
-from typing import Self, Any
+from typing import Any, Self
+
 
 class GameState:
     def __init__(self) -> None:
@@ -30,8 +30,7 @@ class GameState:
         return self_copy
 
     def check_game_over(self) -> None:
-        """Update self.is_game_over according to whether the game ends
-        """
+        """Update self.is_game_over according to whether the game ends"""
         raise NotImplementedError("Game over determination has to be defined")
 
     @property
@@ -101,12 +100,10 @@ class GameState:
         return temp
 
     def print(self) -> None:
-        """To define a way to print the current state of the board
-        """
+        """To define a way to print the current state of the board"""
         raise NotImplementedError("Define and print the game state")
-    
+
     @staticmethod
     def prompt_next_move() -> None:
-        """To prompt the human player to input the next move
-        """
+        """To prompt the human player to input the next move"""
         raise NotImplementedError("Prompting function has to be defined")

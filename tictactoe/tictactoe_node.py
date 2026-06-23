@@ -2,9 +2,10 @@ from typing import Self
 
 from base.determ_mcts_node import DetermMCTSNode
 
+
 class TicTacToeNode(DetermMCTSNode):
-    """MCTS node for a TicTacToe Game
-    """
+    """MCTS node for a TicTacToe Game"""
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         pass
@@ -14,11 +15,11 @@ class TicTacToeNode(DetermMCTSNode):
 
         Returns:
             tuple[Self, int]: Output of the simulation step
-            - Self: Final step of the simulated game state 
+            - Self: Final step of the simulated game state
             - int : The score of the final result
         """
         state, result = super().simulation()
-        return state,  result * -self.state._turnID
+        return state, result * -self.state._turnID
 
     def selection(self, c: float) -> Self:
         """Override the parent class method for debugging
@@ -36,6 +37,6 @@ class TicTacToeNode(DetermMCTSNode):
         while node.parent:
             node = node.parent
             msg = f"\n{node.state._board}]\nScore: {node._W}" + msg
-        
+
         self.logger.debug(msg)
         return current_node
