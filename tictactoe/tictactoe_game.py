@@ -1,3 +1,5 @@
+import ast
+
 import numpy as np
 
 from base.game_state import GameState
@@ -131,4 +133,4 @@ class TicTacToe(GameState):
         Returns:
             tuple[int, int]: The input move
         """
-        return eval(input("Enter your move (i,j): "))
+        return ast.literal_eval(input("Enter your move (i,j): "))

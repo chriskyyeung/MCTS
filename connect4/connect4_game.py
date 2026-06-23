@@ -1,3 +1,5 @@
+import ast
+
 import numpy as np
 
 from base.game_state import GameState
@@ -182,7 +184,7 @@ class Connect4(GameState):
         Returns:
             int: Column index
         """
-        return eval(input("Enter your move (j-th column): "))
+        return ast.literal_eval(input("Enter your move (j-th column): "))
 
 
 if __name__ == "__main__":

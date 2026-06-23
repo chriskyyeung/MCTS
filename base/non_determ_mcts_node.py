@@ -15,7 +15,7 @@ class NonDetermMCTSNode(MCTSNode):
         parent: Self = None,
         parent_action: Any = None,
         discrete_states: np.ndarray = np.array([1.0]),
-        log_config: dict = dict(),
+        log_config: dict | None = None,
     ) -> None:
         """Construct a node to perform MCTS on the input game state
 

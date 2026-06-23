@@ -9,7 +9,7 @@ from tqdm import tqdm
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
 from connect4.connect4_game import Connect4
-from connect4.connect4_node import Connet4Node
+from connect4.connect4_node import Connect4Node
 from game import Game
 from knucklebones.knucklebones_game import Knucklebones
 from knucklebones.knucklebones_node import KnucklebonesNode
@@ -27,7 +27,7 @@ game: list[GameState] = [
 ]
 node: list[MCTSNode] = [
     TicTacToeNode,
-    Connet4Node,
+    Connect4Node,
     KnucklebonesNode,
     KnucklebonesOpenLoopNode,
 ]

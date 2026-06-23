@@ -1,3 +1,4 @@
+import ast
 from itertools import product
 
 import numpy as np
@@ -216,7 +217,7 @@ class Knucklebones(GameState):
         Returns:
             int: Row index
         """
-        return eval(input("Choose the row to place the dice (i-th row): "))
+        return ast.literal_eval(input("Choose the row to place the dice (i-th row): "))
 
 
 if __name__ == "__main__":

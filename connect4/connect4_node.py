@@ -3,7 +3,7 @@ from typing import Self
 from base.determ_mcts_node import DetermMCTSNode
 
 
-class Connet4Node(DetermMCTSNode):
+class Connect4Node(DetermMCTSNode):
     """MCTS node for a Connect-4 Game"""
 
     def __init__(self, *args, **kwargs) -> None:

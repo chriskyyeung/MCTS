@@ -1,3 +1,4 @@
+import ast
 from functools import partial
 
 import numpy as np
@@ -6,7 +7,7 @@ from base.config import Config
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
 from connect4.connect4_game import Connect4
-from connect4.connect4_node import Connet4Node
+from connect4.connect4_node import Connect4Node
 from knucklebones.knucklebones_game import Knucklebones
 from knucklebones.knucklebones_node import KnucklebonesNode
 from knucklebones.knucklebones_openloop_node import KnucklebonesOpenLoopNode
@@ -25,7 +26,7 @@ class Game:
         ]
         self.node: list[MCTSNode] = [
             TicTacToeNode,
-            Connet4Node,
+            Connect4Node,
             KnucklebonesNode,
             KnucklebonesOpenLoopNode,
         ]
@@ -44,14 +45,14 @@ class Game:
 
         # Ask for the game mode to be run
         self.game_id = (
-            eval(
+            ast.literal_eval(
                 input(
                     "Select game ([1] Tic-tac-toe / [2] Connect-4 / [3] Knucklebones / [4] Knucklebones - open loop): "
                 )
             )
             - 1
         )
-        self.game_mode = eval(input("Select mode ([1] PVE / [2] EVP / [3] EVE): "))
+        self.game_mode = ast.literal_eval(input("Select mode ([1] PVE / [2] EVP / [3] EVE): "))
 
         self.initialize_board()
         self.board.print()

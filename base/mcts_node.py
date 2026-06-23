@@ -13,7 +13,7 @@ class MCTSNode:
         state: GameState,
         parent: Self = None,
         parent_action: Any = None,
-        log_config: dict = dict(),
+        log_config: dict | None = None,
     ) -> None:
         """Construct a node to perform MCTS on the input game state
 
@@ -34,9 +34,9 @@ class MCTSNode:
         self.parent = parent
         self.parent_action = parent_action
 
-        # Set logging configuration
-        logging.basicConfig(**log_config)
-        self.logger = logging.getLogger()
+        if log_config is not None:
+            logging.basicConfig(**log_config)
+        self.logger = logging.getLogger(__name__)
 
         # Define necessary variables
         self.children = []

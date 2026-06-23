@@ -14,7 +14,7 @@ class DetermMCTSNode(MCTSNode):
         state: GameState,
         parent: Self = None,
         parent_action: Any = None,
-        log_config: dict = dict(),
+        log_config: dict | None = None,
     ) -> None:
         """Construct a node to perform MCTS on the input game state
 
