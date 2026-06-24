@@ -81,10 +81,9 @@ class PolicyValueHead(nn.Module):
     def __init__(
         self,
         in_channel,
-        height,
-        width,
+        action_space,
+        board_area,
         p_channel,
-        p_output,
         v_channel,
         v_middle,
         v_dropout: float = 0.3,
@@ -93,11 +92,11 @@ class PolicyValueHead(nn.Module):
 
         # Policy Head, kernel fixed to be 1, with padding = 0
         self.policy_conv1 = Conv2dBlock(in_channel, p_channel, kernel_size=1, padding=0)
-        self.policy_fc1 = nn.Linear(height * width * p_channel, p_output)
+        self.policy_fc1 = nn.Linear(board_area * p_channel, action_space)
 
         # Value Head, kernel fixed to be 1, with padding = 0
         self.value_conv1 = Conv2dBlock(in_channel, v_channel, kernel_size=1, padding=0)
-        self.value_fc1 = nn.Linear(height * width * v_channel, v_middle)
+        self.value_fc1 = nn.Linear(board_area * v_channel, v_middle)
         self.value_dropout = nn.Dropout(p=v_dropout)
         self.value_fc2 = nn.Linear(v_middle, 1)
 

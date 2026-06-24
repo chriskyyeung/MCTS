@@ -12,24 +12,22 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from base.config import Config
-from base.game_net import GameData, GameNet, PolicyValueLoss
 from base.game_state import GameState
-from base.puct_node import PUCTNode, PUCTRoot
+from base.nn.game_net import GameData, GameNet, PolicyValueLoss
+from base.nn.puct_node import PUCTNode, PUCTRoot
 
 
 class Trainer:
     def __init__(
         self,
-        game: str,
-        game_constructor: GameState,
-        game_config: str,
-        board_size: tuple = None,
+        game_name: str,
+        game_constructor: type[GameState],
+        config_dir: str = "configs",
         use_cuda: bool = False,
     ) -> None:
-        self.game = game
+        self.game_name = game_name
         self.game_constructor = game_constructor
-        self.game_config = game_config
-        self.board_size = board_size
+        self.config_dir = config_dir
 
         self.set_device(use_cuda)
         pass
@@ -37,6 +35,18 @@ class Trainer:
     def set_device(self, use_cuda: bool):
         self.device = "cuda" if use_cuda and torch.cuda.is_available() else "cpu"
         return
+
+    def transform_board(self, board_non_torch: np.ndarray, turn_id: int) -> torch.Tensor:
+        """Convert raw board to NN input tensor. Override per game if needed.
+
+        Default is to treat it as 1 batch, 3 channel
+        """
+        board_non_torch = torch.from_numpy(board_non_torch)
+        board = torch.zeros(*board_non_torch.shape, 3)
+        board[:, :, :, 0] = board_non_torch == turn_id
+        board[:, :, :, 1] = board_non_torch == -turn_id
+        board[:, :, :, 2] = 1  # turn_id
+        return board.permute(0, 3, 1, 2).to(self.device).float()
 
     def seed_everything(self, seed: int, use_torch: bool = True):
         random.seed(seed)
@@ -78,7 +88,7 @@ class Trainer:
             # After search, root.child is the original state, current is the new state
             if players[turn]:
                 root = PUCTRoot(self.device)
-                current = root.search(current, n_simulation, players[turn], False)
+                current = root.search(current, n_simulation, players[turn], self.transform_board, False)
             else:
                 action = current.state.prompt_next_move()
                 current = PUCTNode(current.state.update(action), None, 0)
@@ -108,12 +118,12 @@ class Trainer:
 
             while not current.state.is_game_over:
                 # After search, root.child is the original state, current is the new state
-                current = root.search(current, battle_config["n_simulation"], player, True)
+                current = root.search(current, battle_config["n_simulation"], player, self.transform_board, True)
                 assert root.child.N > 0, "Oops... Unexpected zero"
                 p_a = root.child.N_a / root.child.N
 
                 board_sym, p_a = self.generate_symmetry(root.child.state._board, p_a)
-                board.append(root.transform_board_to_torch(board_sym, root.child.state._turnID))
+                board.append(self.transform_board(board_sym, root.child.state._turnID))
                 p.append(p_a)
                 v.append(np.repeat(root.child.state._turnID, len(p_a)))
 
@@ -153,7 +163,7 @@ class Trainer:
         done = Event()
 
         # Battle configuration
-        config = Config.load("game_net.yaml", self.game) if config is None else config
+        config = Config.load_game(self.config_dir, self.game_name) if config is None else config
         player = self.get_model(config["model_in_path"], config["game_net"]).share_memory()
 
         # Start all processes
@@ -245,11 +255,11 @@ class Trainer:
 
 if __name__ == "__main__":
     from base.config import Config
-    from tictactoe.tictactoe_game import TicTacToe
+    from games.tictactoe.game import TicTacToe
 
     use_cuda = False
-    self = Trainer("tictactoe", TicTacToe, dict(), None, use_cuda=use_cuda)
-    config = Config.load("game_net.yaml", "tictactoe")
+    self = Trainer("tictactoe", TicTacToe, use_cuda=use_cuda)
+    config = Config.load_game(self.config_dir, self.game_name)
     print(config)
     player = GameNet(device=self.device, **config["game_net"])
     player.load(config["model_in_path"])

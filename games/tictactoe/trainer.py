@@ -1,17 +1,17 @@
 import numpy as np
 import torch
 
-from base.game_net import GameData
-from base.trainer import Trainer
-from tictactoe.tictactoe_game import TicTacToe
+from base.nn.game_net import GameData
+from base.nn.trainer import Trainer
+from games.tictactoe.game import TicTacToe
 
 
 class TicTacToeTrainer(Trainer):
     ROT_IDX = [2, 5, 8, 1, 4, 7, 0, 3, 6]
     FLR_IDX = [2, 1, 0, 5, 4, 3, 8, 7, 6]
 
-    def __init__(self, game_config: str, use_cuda) -> None:
-        super().__init__("tictactoe", TicTacToe, game_config, (1, 3, 3, 3), use_cuda)
+    def __init__(self, config_dir: str = "configs", use_cuda: bool = False) -> None:
+        super().__init__("tictactoe", TicTacToe, config_dir, use_cuda)
 
     def generate_symmetry(self, board: np.ndarray, p: np.ndarray) -> np.ndarray:
         board_sym = [board]
@@ -42,8 +42,8 @@ if __name__ == "__main__":
     torch.serialization.add_safe_globals([GameData])
 
     game = "tictactoe"
-    config = Config.load("game_net.yaml", game)
-    t = TicTacToeTrainer("tictactoe", use_cuda=True)
+    config = Config.load_game("configs", game)
+    t = TicTacToeTrainer(use_cuda=True)
     train = True
 
     if train:
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 player,
                 battle_record,
                 config["n_epoch"],
-                Config.load("game_net.yaml", "hyperparameter"),
+                Config.load("configs/hyperparameter.yaml"),
             )
 
             new_player.dump(config["model_out_path"])
@@ -68,13 +68,14 @@ if __name__ == "__main__":
             config["battle_version"] += 1
             config["model_in_version"] += 1
             config["model_out_version"] += 1
-            Config.tictactoe(config)
+            import yaml
+
+            with open(f"configs/{game}.yaml", "w") as f:
+                yaml.dump(config, f)
     else:
         players = []
         print(config["model_in_path"])
         players.append(t.get_model(config["model_in_path"], config["game_net"]))
         config["model_in_version"] = 8
-        Config.tictactoe(config)
-        print(config["model_in_path"])
         players.append(t.get_model(config["model_in_path"], config["game_net"]))
         t.vs_battle(players, 25)

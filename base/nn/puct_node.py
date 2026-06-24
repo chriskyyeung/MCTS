@@ -145,28 +145,12 @@ class PUCTRoot:
         # To terminate the backpropagate
         return
 
-    def transform_board_to_torch(self, board_non_torch: Any, turn_id: int):
-        """Game specific transformation for preparing input for its net
-
-        Args:
-            board_non_torch (Any): The default board for the game
-
-        Returns:
-            torch.: _description_
-        """
-        # Default is to treat it as 1 batch, 3 channel
-        board_non_torch = torch.from_numpy(board_non_torch)
-        board = torch.zeros(*board_non_torch.shape, 3)
-        board[:, :, :, 0] = board_non_torch == turn_id
-        board[:, :, :, 1] = board_non_torch == -turn_id
-        board[:, :, :, 2] = 1  # turn_id
-        return board.permute(0, 3, 1, 2).to(self.device).float()
-
     def search(
         self,
         current: PUCTNode,
         n_search: int,
         game_net: torch.nn.Module,
+        transform_fn,
         use_dirichlet: bool = False,
     ) -> PUCTNode:
         self.set_child(current)
@@ -184,7 +168,7 @@ class PUCTRoot:
                     v_a = leaf.state.game_result * leaf.state._turnID
                 else:
                     # Use the net to get p, v pair
-                    board = self.transform_board_to_torch(
+                    board = transform_fn(
                         leaf.state._board.reshape(1, *board_size),
                         leaf.state._turnID,
                     )
@@ -240,8 +224,8 @@ class PUCTRoot:
 
 if __name__ == "__main__":
     from base.config import Config
-    from base.game_net import GameNet
-    from tictactoe.tictactoe_game import TicTacToe
+    from base.nn.game_net import GameNet
+    from games.tictactoe.game import TicTacToe
 
     root = PUCTRoot(False)
     config = Config.load("game_net.yaml", "tictactoe")["game_net"]
