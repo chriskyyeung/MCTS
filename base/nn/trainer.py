@@ -163,7 +163,10 @@ class Trainer:
         done = Event()
 
         # Battle configuration
-        config = Config.load_game(self.config_dir, self.game_name) if config is None else config
+        if config is None:
+            config = Config.load_game(self.config_dir, self.game_name)
+        else:
+            config = Config.update_config(config, self.game_name)
         player = self.get_model(config["model_in_path"], config["game_net"]).share_memory()
 
         # Start all processes

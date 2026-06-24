@@ -51,14 +51,19 @@ class Config:
             dict: Fully resolved configuration dictionary.
         """
         config = cls.load(str(Path(config_dir) / f"{game_name}.yaml"))
+        if "board_shape" in config:
+            config["game_net"] = cls.game_net(config["game_net"], config["board_shape"])
+
+        config = cls.update_config(config, game_name)
+        return config
+
+    @classmethod
+    def update_config(cls, config: dict, game_name: str) -> dict:
         config["battle_path"] = config["battle_format"].format(game=game_name, version=config["battle_version"])
         config["model_in_path"] = config["model_format"].format(game=game_name, version=config["model_in_version"])
         config["model_out_path"] = config["model_format"].format(game=game_name, version=config["model_out_version"])
-        if "board_shape" in config:
-            config["game_net"] = cls.game_net(config["game_net"], config["board_shape"])
         return config
 
 
 if __name__ == "__main__":
-    print(Config.load("config.yaml", "EVE"))
-    print(Config.load("config.yaml", "main"))
+    print(Config.load_game("configs", "tictactoe"))
