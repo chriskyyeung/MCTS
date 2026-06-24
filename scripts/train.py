@@ -16,7 +16,7 @@ from base.registry import get_game
 
 def main():
     parser = argparse.ArgumentParser(description="Train AlphaZero MCTS Network")
-    parser.add_argument("--game", type=str, default="tictactoe", help="Game to train (e.g. tictactoe, connect4)")
+    parser.add_argument("--game", type=str, default="", help="Game to train (e.g. tictactoe, connect4)")
     parser.add_argument("--no-cuda", action="store_true", help="Disable CUDA")
     parser.add_argument("--eval-only", action="store_true", help="Run vs_battle instead of training")
     args = parser.parse_args()
@@ -26,9 +26,13 @@ def main():
 
     torch.serialization.add_safe_globals([GameData])
 
-    config = Config.load_game("configs", game_name)
-    game_reg = get_game(game_name)
+    try:
+        config = Config.load_game("configs", game_name)
+    except Exception as e:
+        print(f"Failed to load configurations: {e}, game: {game_name}")
+        return
 
+    game_reg = get_game(game_name)
     trainer_cls = game_reg.get("trainer_cls")
     if not trainer_cls:
         print(f"No trainer registered for game '{game_name}'")

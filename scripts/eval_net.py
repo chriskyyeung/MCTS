@@ -17,7 +17,7 @@ from base.registry import get_game
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--game", type=str, default="tictactoe", help="Game to evaluate")
+    parser.add_argument("--game", type=str, default="", help="Game to evaluate")
     parser.add_argument("--model-version", type=int, default=None, help="Model version to load")
     args = parser.parse_args()
     game_name = args.game
@@ -30,7 +30,7 @@ def main():
         main_config = Config.load("configs/mcts.yaml", "main")
         net_config = Config.load_game("configs", game_name)
     except Exception as e:
-        print(f"Failed to load configurations: {e}")
+        print(f"Failed to load configurations: {e}, game: {game_name}")
         return
 
     mcts_config = main_config["game_config"].get(game_name, {"c": 1, "simulation_time": 5, "n_simulation": 500})
