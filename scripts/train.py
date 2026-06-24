@@ -6,7 +6,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import torch
-import yaml
 
 import games  # noqa: F401
 from base.config import Config
@@ -62,9 +61,6 @@ def main():
             config["battle_version"] += 1
             config["model_in_version"] += 1
             config["model_out_version"] += 1
-
-            with open(f"configs/{game_name}.yaml", "w") as f:
-                yaml.dump(config, f)
     else:
         players = []
         print(config["model_in_path"])
