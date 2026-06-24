@@ -1,33 +1,34 @@
-from typing import Self, Any
+from typing import Any, Self
 
 import numpy as np
 
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
 
+
 class DetermMCTSNode(MCTSNode):
-    """Base class for a Deterministic MCTS node
-    """
+    """Base class for a Deterministic MCTS node"""
+
     def __init__(
-            self, 
-            state: GameState, 
-            parent: Self = None,
-            parent_action: Any = None,
-            log_config: dict = dict(), 
-        ) -> None:
+        self,
+        state: GameState,
+        parent: Self = None,
+        parent_action: Any = None,
+        log_config: dict | None = None,
+    ) -> None:
         """Construct a node to perform MCTS on the input game state
 
         Args:
-            state (GameState): 
+            state (GameState):
                 Current game state
-            parent (Self, optional): 
-                Parent node of the current state. 
+            parent (Self, optional):
+                Parent node of the current state.
                 Defaults to None.
             parent_action (Any, optional):
-                Action taken by the parent node to reach here. 
+                Action taken by the parent node to reach here.
                 Defaults to None.
-            log_config (dict, optional): 
-                Configuration for `logging` library. 
+            log_config (dict, optional):
+                Configuration for `logging` library.
                 Defaults to dict().
         """
         super().__init__(state, parent, parent_action, log_config)
@@ -36,10 +37,9 @@ class DetermMCTSNode(MCTSNode):
     @property
     def child_weights(self) -> list:
         # Weights of every children
-        return  np.array([
-            child._W / child._N + self._c * np.sqrt(2 * np.log(self._N) / child._N)
-            for child in self.children
-        ])
+        return np.array(
+            [child._W / child._N + self._c * np.sqrt(2 * np.log(self._N) / child._N) for child in self.children]
+        )
 
     def _get_action(self) -> list:
         return self._untried_actions.pop()
@@ -48,7 +48,7 @@ class DetermMCTSNode(MCTSNode):
         # Select the best child
         w = self.child_weights
         return self.children[np.random.choice(np.where(w == max(w))[0])]
-        
+
     def get_child_by_action(self, action) -> Self:
         for child in self.children:
             if child.parent_action == action:
@@ -96,5 +96,5 @@ class DetermMCTSNode(MCTSNode):
         while not current_state.is_game_over:
             action = self.simulation_step(current_state)
             current_state = current_state.update(action)
-        
+
         return current_state, current_state.game_result

@@ -2,9 +2,10 @@ from typing import Self
 
 from base.determ_mcts_node import DetermMCTSNode
 
-class Connet4Node(DetermMCTSNode):
-    """MCTS node for a Connect-4 Game
-    """
+
+class Connect4Node(DetermMCTSNode):
+    """MCTS node for a Connect-4 Game"""
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         pass
@@ -14,8 +15,8 @@ class Connet4Node(DetermMCTSNode):
 
         Returns:
             tuple[Self, int]: Output of the simulation step
-            - Self: Final step of the simulated game state 
+            - Self: Final step of the simulated game state
             - int : The score of the final result
         """
         state, result = super().simulation()
-        return state,  result * -self.state._turnID
+        return state, result * -self.state._turnID

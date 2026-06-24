@@ -1,26 +1,27 @@
 from math import sqrt
-from typing import Self, Any
+from typing import Any, Self
 
 import numpy as np
 import torch
 
 from base.game_state import GameState
 
+
 class PUCTNode:
-    """This class is a MCTS with neural network
-    """
+    """This class is a MCTS with neural network"""
+
     def __init__(self, state: GameState, parent: Self, parent_action: Any) -> None:
         self.state = state
         self.n_action = len(self.state.all_actions)
         self.is_expanded = False
 
-        self.c_puct = 1.
+        self.c_puct = 1.0
         self.parent = parent
         self.parent_action = parent_action
         self.child = dict()
-        self.V_a = np.zeros(self.n_action, dtype=np.float32) # Value of each child, for calculation of Q_a
-        self.p_a = np.zeros(self.n_action, dtype=np.float32) # prior prob. of each child
-        self.N_a = np.zeros(self.n_action, dtype=np.float32) # number of visit of each child
+        self.V_a = np.zeros(self.n_action, dtype=np.float32)  # Value of each child, for calculation of Q_a
+        self.p_a = np.zeros(self.n_action, dtype=np.float32)  # prior prob. of each child
+        self.N_a = np.zeros(self.n_action, dtype=np.float32)  # number of visit of each child
         pass
 
     @property
@@ -53,11 +54,11 @@ class PUCTNode:
     @property
     def Q_a(self):
         return self.V_a / (1 + self.N_a)
-    
+
     @property
     def U_a(self):
-        return self.c_puct * sqrt(self.N) * self.p_a  / (1 + self.N_a)
-    
+        return self.c_puct * sqrt(self.N) * self.p_a / (1 + self.N_a)
+
     def no_legal_move(self):
         # Default: Game ends when no legal moves. Thus do nothing
         return
@@ -65,7 +66,7 @@ class PUCTNode:
     def best_child(self) -> Self:
         best_moves = (self.Q_a + self.U_a)[self.state.legal_index]
         return self.state.legal_index[np.random.choice(np.where(best_moves == np.max(best_moves))[0])]
-        
+
     def expand(self, p_a) -> Self:
         """_summary_
 
@@ -79,7 +80,7 @@ class PUCTNode:
             self.is_expanded = True
             mask = np.repeat(True, len(p_a))
             mask[self.state.legal_index] = False
-            p_a[mask] = 0.
+            p_a[mask] = 0.0
             p_a /= np.sum(p_a)
         else:
             # Case handling depending on game rules...
@@ -99,13 +100,13 @@ class PUCTNode:
                     current,
                     move_id,
                 )
-            
+
             current = current.child[move_id]
             # current.state.print()
-    
+
         return current
-    
-    def backpropagate(self, score: Any) -> None:    
+
+    def backpropagate(self, score: Any) -> None:
         """Backpropagation, triggering parent's one if any
 
         Args:
@@ -114,16 +115,17 @@ class PUCTNode:
         if self.parent:
             self.N += 1
             self.V += score
-            self.parent.backpropagate(score*-1)
+            self.parent.backpropagate(score * -1)
         return
 
+
 class PUCTRoot:
-    """The root of the tree of PUCT roots and perform the search
-    """
+    """The root of the tree of PUCT roots and perform the search"""
+
     def __init__(self, device: str = "cpu") -> None:
         self.device = device
-        self.parent = None # Must be None
-        self.child: GameState = None # Only one child which is the current state
+        self.parent = None  # Must be None
+        self.child: GameState = None  # Only one child which is the current state
         self.N_a = [0]
         self.V_a = [0]
         pass
@@ -152,15 +154,21 @@ class PUCTRoot:
         Returns:
             torch.: _description_
         """
-        # Default is to treat it as 1 batch, 3 channel 
+        # Default is to treat it as 1 batch, 3 channel
         board_non_torch = torch.from_numpy(board_non_torch)
         board = torch.zeros(*board_non_torch.shape, 3)
-        board[:,:,:,0] = board_non_torch == turn_id
-        board[:,:,:,1] = board_non_torch == -turn_id
-        board[:,:,:,2] = turn_id
-        return board.permute(0,3,1,2).to(self.device).float()
+        board[:, :, :, 0] = board_non_torch == turn_id
+        board[:, :, :, 1] = board_non_torch == -turn_id
+        board[:, :, :, 2] = 1  # turn_id
+        return board.permute(0, 3, 1, 2).to(self.device).float()
 
-    def search(self, current: PUCTNode, n_search: int, game_net: torch.nn.Module, use_dirichlet: bool = False) -> PUCTNode:
+    def search(
+        self,
+        current: PUCTNode,
+        n_search: int,
+        game_net: torch.nn.Module,
+        use_dirichlet: bool = False,
+    ) -> PUCTNode:
         self.set_child(current)
         board_size = current.state._board.shape
 
@@ -169,47 +177,70 @@ class PUCTRoot:
                 # Selection until reaching a leaf
                 leaf = self.child.select()
 
-                # Use the net to get p, v pair
-                board = self.transform_board_to_torch(leaf.state._board.reshape(1,*board_size), leaf.state._turnID)
-                p_a, v_a = game_net(board)
-                p_a = torch.nn.Softmax(dim=1)(p_a).flatten().detach().cpu().numpy()
-                v_a = v_a.item()
-            
-                # Expansion if needed
-                if not (leaf.is_terminal or leaf.is_expanded):
-                    leaf.expand(p_a)
-                
-                # Backpropagation
-                leaf.backpropagate(v_a)
-        
+                if leaf.is_terminal:
+                    # Terminal node: use ground-truth game result
+                    # Multiply by _turnID to convert from absolute to
+                    # current-player perspective (matching network convention)
+                    v_a = leaf.state.game_result * leaf.state._turnID
+                else:
+                    # Use the net to get p, v pair
+                    board = self.transform_board_to_torch(
+                        leaf.state._board.reshape(1, *board_size),
+                        leaf.state._turnID,
+                    )
+                    p_a, v_a = game_net(board)
+                    p_a = torch.nn.Softmax(dim=1)(p_a).flatten().detach().cpu().numpy()
+                    v_a = v_a.item()
+
+                    # Expansion if needed
+                    if not leaf.is_expanded:
+                        leaf.expand(p_a)
+
+                # Backpropagation (ground truth for terminal, network estimate otherwise)
+                leaf.backpropagate(-v_a)
+
         # Only consider number of visit for result
-        move_id = self.choose_best_move(0.01, 0.03, 0.25)
+        if use_dirichlet:
+            move_id = self.choose_best_move(tau=1.0, dirichlet=0.03, epsilon=0.25, stochastic=True)
+        else:
+            move_id = self.choose_best_move(tau=0.0, dirichlet=0.0, epsilon=0.0, stochastic=False)
+
         if move_id not in self.child.child:
             self.child.child[move_id] = PUCTNode(
                 self.child.state.update(self.child.state.all_actions[move_id]),
                 self.child,
                 move_id,
             )
-        
+
         # Return result
         return self.child.child[move_id]
 
-    def choose_best_move(self, tau: float = 1., dirichlet: float = 0.03, epsilon: float = 0.):
+    def choose_best_move(
+        self, tau: float = 1.0, dirichlet: float = 0.03, epsilon: float = 0.0, stochastic: bool = False
+    ):
         child_visit = self.child.N_a[self.child.state.legal_index]
-        child_visit = np.pow(child_visit, tau)
 
-        if epsilon > 0:
-            noise = np.random.dirichlet(np.repeat(dirichlet, len(child_visit)), len(child_visit))
-            child_visit = (1 - epsilon) * child_visit / np.sum(child_visit) + epsilon * noise
+        if stochastic:
+            if tau > 0:
+                child_visit = np.pow(child_visit, 1.0 / tau)
+            probs = child_visit / np.sum(child_visit)
+            if epsilon > 0:
+                noise = np.random.dirichlet(np.repeat(dirichlet, len(child_visit)))
+                probs = (1 - epsilon) * probs + epsilon * noise
+            # Re-normalize to ensure probabilities sum exactly to 1.0
+            probs = probs / np.sum(probs)
+            move_idx = np.random.choice(len(probs), p=probs)
+            move_id = self.child.state.legal_index[move_idx]
+        else:
+            max_visit = np.where(child_visit == np.max(child_visit))[0]
+            move_id = self.child.state.legal_index[np.random.choice(max_visit)]
 
-        max_visit = np.where(child_visit == np.max(child_visit))[0]
-        move_id = np.random.choice(max_visit)
-        move_id = self.child.state.legal_index[move_id]
         return move_id
-    
+
+
 if __name__ == "__main__":
     from base.config import Config
-    from game_net import GameNet    
+    from base.game_net import GameNet
     from tictactoe.tictactoe_game import TicTacToe
 
     root = PUCTRoot(False)
@@ -239,7 +270,7 @@ if __name__ == "__main__":
     #         print(current.U_a)
 
     #         current = current.select()
-        
+
     #     current.backpropagate(1)
     #     print(empty_state.N_a)
     #     print(empty_state.V_a)

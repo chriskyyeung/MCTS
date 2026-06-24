@@ -1,44 +1,45 @@
-from typing import Self, Any
+from typing import Any, Self
 
 import numpy as np
 
 from base.game_state import GameState
 from base.mcts_node import MCTSNode
 
+
 class OpenLoopMCTSNode(MCTSNode):
-    """Base class for a Open Loop MCTS node for non-deterministic game
-    """
+    """Base class for a Open Loop MCTS node for non-deterministic game"""
+
     def __init__(
-            self, 
-            state: GameState, 
-            parent: Self = None,
-            parent_action: Any = None,
-            discrete_states: np.ndarray = np.array([1.]),
-            log_config: dict = dict(),
-        ) -> None:
+        self,
+        state: GameState,
+        parent: Self = None,
+        parent_action: Any = None,
+        discrete_states: np.ndarray = np.array([1.0]),
+        log_config: dict | None = None,
+    ) -> None:
         """Construct a node to perform MCTS on the input game state
 
         Args:
-            state (GameState): 
+            state (GameState):
                 Current game state
-            parent (Self, optional): 
-                Parent node of the current state. 
+            parent (Self, optional):
+                Parent node of the current state.
                 Defaults to None.
             parent_action (Any, optional):
-                Action taken by the parent node to reach here. 
+                Action taken by the parent node to reach here.
                 Defaults to None.
             discrete_states (np.ndarray, optional):
-                Probability for each discrete states. 
+                Probability for each discrete states.
                 Defaults to np.array([1.]).
-            log_config (dict, optional): 
-                Configuration for `logging` library. 
+            log_config (dict, optional):
+                Configuration for `logging` library.
                 Defaults to dict().
         """
         super().__init__(state, parent, parent_action, log_config)
 
         # Handling random state
         self._set_random_state(discrete_states)
-        
+
         # Currently designed for numeric "action" values
         self._id_to_move = state.initialize_actions()
         self._move_to_id = {move: i for i, move in enumerate(self._id_to_move)}
@@ -49,7 +50,9 @@ class OpenLoopMCTSNode(MCTSNode):
     def child_weights(self) -> list:
         # Dummy random state for validity checking
         random_state = self._get_random_state_index(1)
-        valid_children = np.array([self.state._is_valid_move(random_state+1, self._id_to_move[i]) for i in range(len(self.children))])
+        valid_children = np.array(
+            [self.state._is_valid_move(random_state + 1, self._id_to_move[i]) for i in range(len(self.children))]
+        )
 
         # Only count visit of children that are valid in current state
         total_visit = np.dot(valid_children, [c._N if c else 0 for c in self.children])
@@ -57,8 +60,8 @@ class OpenLoopMCTSNode(MCTSNode):
         weights = np.repeat(-np.inf, repeats=len(self.children))
         for inode, node in enumerate(self.children):
             if valid_children[inode]:
-                weights[inode] = node._W / node._N + self._c * np.sqrt(2 * np.log(total_visit)/ node._N)
-            
+                weights[inode] = node._W / node._N + self._c * np.sqrt(2 * np.log(total_visit) / node._N)
+
         self.logger.debug(total_visit)
         self.logger.debug(weights)
         return weights
@@ -74,14 +77,14 @@ class OpenLoopMCTSNode(MCTSNode):
     def _set_random_state(self, discrete_states) -> None:
         # Handling random state
         self._random_state_config = {
-            'a': range(len(discrete_states)),
-            'p': discrete_states,
+            "a": range(len(discrete_states)),
+            "p": discrete_states,
         }
         return
 
     def _get_action(self) -> list:
         return self._untried_actions.pop()
-    
+
     def best_child(self) -> Self:
         # Decide the best move independent of the random state
         w = self.child_weights
@@ -91,7 +94,11 @@ class OpenLoopMCTSNode(MCTSNode):
         # Generate the random state and update the best child
         dice = self._random_state
         self.children[i].state = self.state.update((dice, move))
-        self.children[i]._untried_actions = [j for j in self.children[i].state.get_legal_actions() if self.children[i].children[j] is None]
+        self.children[i]._untried_actions = [
+            j
+            for j in self.children[i].state.get_legal_actions()
+            if self.children[i].children[self.children[i]._move_to_id[j]] is None
+        ]
         self.children[i].parent_action = (dice, move)
 
         return self.children[i]
@@ -107,14 +114,15 @@ class OpenLoopMCTSNode(MCTSNode):
         """
         # For open loop, actions only contains deterministic part
         action_id = self._get_action()
-        action = (self._random_state, self._move_to_id[action_id])
-        self.children[action_id] = self.__class__(
-                self.state.update(action),
-                parent=self,
-                parent_action=action,
-                discrete_states=np.repeat(1/6, repeats=6),
+        action = (self._random_state, action_id)
+        action_idx = self._move_to_id[action_id]
+        self.children[action_idx] = self.__class__(
+            self.state.update(action),
+            parent=self,
+            parent_action=action,
+            discrete_states=np.repeat(1 / 6, repeats=6),
         )
-        return self.children[action_id]
+        return self.children[action_idx]
 
     def selection(self, c: float) -> Self:
         """Selection step
@@ -161,5 +169,5 @@ class OpenLoopMCTSNode(MCTSNode):
         while not current_state.is_game_over:
             action = self.simulation_step(current_state, self._random_state)
             current_state = current_state.update(action)
-        
+
         return current_state, current_state.game_result
