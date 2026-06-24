@@ -1,41 +1,26 @@
 import logging
-from functools import partial
+import sys
 from itertools import product
 from multiprocessing import Pool
+from pathlib import Path
+
+# Add project root to path so we can import from 'base' and 'games'
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 from tqdm import tqdm
 
-from base.game_state import GameState
-from base.mcts_node import MCTSNode
-from connect4.connect4_game import Connect4
-from connect4.connect4_node import Connect4Node
-from game import Game
-from knucklebones.knucklebones_game import Knucklebones
-from knucklebones.knucklebones_node import KnucklebonesNode
-from knucklebones.knucklebones_openloop_node import KnucklebonesOpenLoopNode
-from tictactoe.tictactoe_game import TicTacToe
-from tictactoe.tictactoe_node import TicTacToeNode
+import games  # noqa: F401
+from base.registry import list_games
+from scripts.play import Game
 
 logger = logging.getLogger(__name__)
 
-game: list[GameState] = [
-    TicTacToe,
-    Connect4,
-    Knucklebones,
-    partial(Knucklebones, False),
-]
-node: list[MCTSNode] = [
-    TicTacToeNode,
-    Connect4Node,
-    KnucklebonesNode,
-    KnucklebonesOpenLoopNode,
-]
-game_name: list[str] = ["tictactoe", "connect4", "knucklebones", "knucklebones_open"]
+# Using registry dynamically inside the main block instead of hardcoding.
 
 
 def eve_simulation(
-    game_id: int,
+    game_config_name: str,
     game_config: dict,
     first_hand: int,
     second_hand: int,
@@ -48,7 +33,7 @@ def eve_simulation(
     logger.info(msg)
 
     game = Game()
-    game.game_id = game_id
+    game.game_name = game_config_name
     game.config = dict()
     game.config["log_config"] = log_config
 
@@ -77,22 +62,26 @@ def eve_simulation(
 if __name__ == "__main__":
     from base.config import Config
 
-    config = Config.load("config.yaml", "EVE")
+    config = Config.load("configs/mcts.yaml", "EVE")
     game_id = config["game_id"]
     game_config = []
-    config["log_config"]["filename"] = f"EvE_{game_name[game_id]}.log"
+
+    available_games = list_games()
+    game_name_str = available_games[game_id]
+
+    config["log_config"]["filename"] = f"EvE_{game_name_str}.log"
 
     logging.basicConfig(**config["log_config"])
     logger = logging.getLogger("Main program")
 
-    for c, t, n in product(*config["game_config"][game_name[game_id]].values()):
+    for c, t, n in product(*config["game_config"][game_name_str].values()):
         game_config.append({"c": c, "simulation_time": t, "n_simulation": n})
 
     n_player = len(game_config)
     competition_record = [[None for _ in range(n_player)] for _ in range(n_player)]
 
     match_up = [
-        (game_id, game_config, i, j, config["n_round"], config["log_config"])
+        (game_name_str, game_config, i, j, config["n_round"], config["log_config"])
         for i in range(n_player)
         for j in range(n_player)
     ]
@@ -102,4 +91,4 @@ if __name__ == "__main__":
     for i, j, count in result:
         competition_record[i][j] = count
 
-    np.save(f"record_{game_name[game_id]}", np.array(competition_record))
+    np.save(f"record_{game_name_str}", np.array(competition_record))
