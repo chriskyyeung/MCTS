@@ -236,7 +236,7 @@ class Trainer:
                 optimizer.step()
 
             epoch_loss /= n_batch
-            scheduler.step(epoch_loss)
+            scheduler.step(epoch_loss.detach())
             last_lr = scheduler.get_last_lr()[0]
             print(f"Epoch {epoch} -- Loss: {epoch_loss:.4f} in {time()-epoch_time:.2f} s with lr = {last_lr:.4f}")
 

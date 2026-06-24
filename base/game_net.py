@@ -189,9 +189,9 @@ if __name__ == "__main__":
 
     from base.config import Config
 
-    use_cuda = True
+    use_cuda = False
     device = "cuda" if use_cuda else "cpu"
-    board = torch.randn((256, 3, 3, 1)).to(device)
+    board = torch.randn((256, 3, 3, 3)).to(device)
     config = Config.load("game_net.yaml", "tictactoe")["game_net"]
 
     t0 = time()
@@ -200,6 +200,7 @@ if __name__ == "__main__":
             device=device,
             **config,
         )
+        print(test_net)
         for _ in range(1000):
             p, v = test_net(board)
             p = nn.Softmax(dim=1)(p).view(-1, 3, 3)
