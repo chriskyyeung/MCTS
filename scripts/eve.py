@@ -1,10 +1,16 @@
 import logging
+import sys
 from itertools import product
 from multiprocessing import Pool
+from pathlib import Path
+
+# Add project root to path so we can import from 'base' and 'games'
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 from tqdm import tqdm
 
+import games  # noqa: F401
 from base.registry import list_games
 from scripts.play import Game
 

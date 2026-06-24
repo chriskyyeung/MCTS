@@ -1,7 +1,13 @@
 import ast
+import sys
+from pathlib import Path
+
+# Add project root to path so we can import from 'base' and 'games'
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 
+import games  # noqa: F401
 from base.config import Config
 from base.mcts_node import MCTSNode
 from base.registry import get_game, list_games

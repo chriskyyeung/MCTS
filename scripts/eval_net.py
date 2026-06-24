@@ -1,8 +1,14 @@
 import argparse
 import ast
+import sys
+from pathlib import Path
+
+# Add project root to path so we can import from 'base' and 'games'
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import torch
 
+import games  # noqa: F401
 from base.config import Config
 from base.nn.game_net import GameData, GameNet
 from base.nn.puct_node import PUCTNode, PUCTRoot
