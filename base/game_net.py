@@ -8,8 +8,8 @@ from torch.utils.data import Dataset
 initialization_dict = {
     "he": nn.init.kaiming_normal_,
     "he_uniform": nn.init.kaiming_uniform_,
-    "xaiver": nn.init.xavier_normal_,
-    "xaiver_uniform": nn.init.xavier_uniform_,
+    "xavier": nn.init.xavier_normal_,
+    "xavier_uniform": nn.init.xavier_uniform_,
 }
 
 
@@ -42,16 +42,27 @@ class ResidualBlock(nn.Module):
     def __init__(
         self,
         in_channel,
-        out_channel,
         kernel_size,
+        mid_channel: int | None = None,
         stride=1,
         padding=1,
         **kwargs,
     ) -> None:
+        """Residual block with optional mid_channel bottleneck.
+
+        Args:
+            in_channel: Number of input (and output) channels.
+            kernel_size: Convolution kernel size.
+            mid_channel: Hidden channel width of the two inner convolutions.
+                Defaults to in_channel (no bottleneck).
+            stride: Convolution stride.
+            padding: Convolution padding.
+        """
         super().__init__()
-        self.conv1 = Conv2dBlock(in_channel, out_channel, kernel_size, stride=stride, padding=padding)
+        mid = mid_channel if mid_channel is not None else in_channel
+        self.conv1 = Conv2dBlock(in_channel, mid, kernel_size, stride=stride, padding=padding)
         self.conv2 = Conv2dBlock(
-            out_channel,
+            mid,
             in_channel,
             kernel_size,
             stride=stride,
@@ -76,19 +87,19 @@ class PolicyValueHead(nn.Module):
         p_output,
         v_channel,
         v_middle,
+        v_dropout: float = 0.3,
     ) -> None:
         super().__init__()
 
         # Policy Head, kernel fixed to be 1, with padding = 0
         self.policy_conv1 = Conv2dBlock(in_channel, p_channel, kernel_size=1, padding=0)
         self.policy_fc1 = nn.Linear(height * width * p_channel, p_output)
-        self.softmax = nn.Softmax(dim=1)
 
         # Value Head, kernel fixed to be 1, with padding = 0
         self.value_conv1 = Conv2dBlock(in_channel, v_channel, kernel_size=1, padding=0)
         self.value_fc1 = nn.Linear(height * width * v_channel, v_middle)
+        self.value_dropout = nn.Dropout(p=v_dropout)
         self.value_fc2 = nn.Linear(v_middle, 1)
-        pass
 
     def forward(self, x):
         p = torch.flatten(self.policy_conv1(x), start_dim=1)
@@ -96,6 +107,7 @@ class PolicyValueHead(nn.Module):
 
         v = torch.flatten(self.value_conv1(x), start_dim=1)
         v = F.relu(self.value_fc1(v))
+        v = self.value_dropout(v)
         v = F.tanh(self.value_fc2(v))
         return p, v
 

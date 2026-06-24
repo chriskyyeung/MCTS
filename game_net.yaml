@@ -10,25 +10,27 @@ hyperparameter:
   
 tictactoe:
   game_net:
-    init_method: "xaiver"
+    init_method: "xavier"
     conv_config:
       out_channel: 32
       kernel_size: 3
     residual_config:
       n_block: 2
-      out_channel: 32
+      # mid_channel: 32
       kernel_size: 3
     policy_value_config:
       p_channel: 2
       v_channel: 1
       v_middle: 72
+      v_dropout: 0.3
   n_iteration: 5
   n_process: 8
   n_game: 50
-  n_simulation: 25
-  n_epoch: 50
+  n_simulation: 100
+  n_epoch: 30
   battle_version: 0
   model_in_version: 0
   model_out_version: 1
+  eval_model_version: 0
   battle_format: "data/{game}/battle_v{version}.pt"
   model_format: "data/{game}/model_v{version}.pt"

@@ -117,12 +117,6 @@ class Trainer:
                 p.append(p_a)
                 v.append(np.repeat(root.child.state._turnID, len(p_a)))
 
-            # p_a = np.repeat(1 / len(current.N_a), len(current.N_a))
-            # board_sym, p_a = self.generate_symmetry(current.state._board, p_a)
-            # board.append(root.transform_board_to_torch(board_sym, current.state._turnID))
-            # p.append(p_a)
-            # v.append(np.repeat(current.state._turnID, len(p_a)))
-
             battle_record["board"].append(torch.cat(board))
             battle_record["p"].append(torch.from_numpy(np.concatenate(p)))
             battle_record["v"].append(torch.from_numpy(np.concatenate(v) * current.state.game_result))
