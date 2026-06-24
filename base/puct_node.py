@@ -159,7 +159,7 @@ class PUCTRoot:
         board = torch.zeros(*board_non_torch.shape, 3)
         board[:, :, :, 0] = board_non_torch == turn_id
         board[:, :, :, 1] = board_non_torch == -turn_id
-        board[:, :, :, 2] = turn_id
+        board[:, :, :, 2] = 1  # turn_id
         return board.permute(0, 3, 1, 2).to(self.device).float()
 
     def search(
@@ -197,7 +197,7 @@ class PUCTRoot:
                         leaf.expand(p_a)
 
                 # Backpropagation (ground truth for terminal, network estimate otherwise)
-                leaf.backpropagate(v_a)
+                leaf.backpropagate(-v_a)
 
         # Only consider number of visit for result
         if use_dirichlet:
