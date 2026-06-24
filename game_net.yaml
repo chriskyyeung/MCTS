@@ -28,9 +28,9 @@ tictactoe:
   n_game: 100
   n_simulation: 100
   n_epoch: 10
-  battle_version: 7
+  battle_version: 0
   model_in_version: 0
   model_out_version: 1
-  eval_model_version: 0
+  eval_model_version: 15
   battle_format: "data/{game}/battle_v{version}.pt"
   model_format: "data/{game}/model_v{version}.pt"

@@ -191,19 +191,32 @@ if __name__ == "__main__":
 
     use_cuda = False
     device = "cuda" if use_cuda else "cpu"
+    config = Config.load("game_net.yaml", "tictactoe")
+    model_path = config["model_format"].format(
+        game="tictactoe",
+        version=config.get("eval_model_version", 0),
+    )
+
     board = torch.randn((256, 3, 3, 3)).to(device)
-    config = Config.load("game_net.yaml", "tictactoe")["game_net"]
+    board[:, 2, :, :] = 1
+
+    board[0, 0, :, :] = 0.0
+    board[0, 1, :, :] = 0.0
+    board[0, 0, 0, 0] = 1.0
+    board[0, 1, 2, 2] = 1.0
 
     t0 = time()
     with torch.no_grad():
         test_net = GameNet(
             device=device,
-            **config,
+            **config.get("game_net", {}),
         )
+
+        test_net.load(model_path)
         print(test_net)
-        for _ in range(1000):
-            p, v = test_net(board)
-            p = nn.Softmax(dim=1)(p).view(-1, 3, 3)
+
+        p, v = test_net(board)
+        p = nn.Softmax(dim=1)(p).view(-1, 3, 3)
 
     print(time() - t0)
     print(p[0, :, :], v[0])
